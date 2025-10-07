@@ -38,7 +38,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>${javafx.maven.plugin.version}</version>
                 <configuration>
-                    <mainClass>org.sosgame.Main</mainClass>
+                    <mainClass>org.sosgame.sprint0.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,4 +1,4 @@
-package org.sosgame;
+package org.sosgame.sprint0;
 
 // Source: Claude
 // Prompt: Create a simple calculator app in java.
