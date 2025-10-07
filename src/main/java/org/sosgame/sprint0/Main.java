@@ -1,4 +1,4 @@
-package org.sosgame;
+package org.sosgame.sprint0;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;

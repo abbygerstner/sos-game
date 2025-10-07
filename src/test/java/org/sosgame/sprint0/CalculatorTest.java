@@ -1,4 +1,4 @@
-package org.sosgame;
+package org.sosgame.sprint0;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
