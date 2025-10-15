@@ -3,10 +3,7 @@ package org.sosgame.sprint2;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -17,7 +14,10 @@ import javafx.geometry.Insets;
 public class GUI extends Application {
     // game model
     private static Board board;
-    private int boardSize = 8;
+    private static int boardSize = 8;
+    private static TextField boardSizeField;
+    private static GridPane grid;
+    private Console console;
 
     public void start(Stage primaryStage) {
         //TODO: create new overall theme with custom font
@@ -29,16 +29,21 @@ public class GUI extends Application {
 
         // sos game grid
         board = new Board(boardSize);
-        GridPane grid = getGridPane();
+        console = new Console(board);
+        grid = getGridPane();
 
         Label currentTurnLabel = new Label("Current Turn: blue (or red)");
 
-        RadioButton radioButton = new RadioButton("Simple Game");
-        RadioButton radioButton2 = new RadioButton("General Game");
+        RadioButton simpleRadio = new RadioButton("Simple Game");
+        RadioButton generalRadio = new RadioButton("General Game");
+
+        ToggleGroup group = new ToggleGroup();
+        simpleRadio.setToggleGroup(group);
+        generalRadio.setToggleGroup(group);
 
         // three main vertical panels
         VBox leftPanel = createBluePlayerPanel();
-        VBox centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, radioButton, radioButton2);
+        VBox centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
         VBox rightPanel = createRedPlayerPanel();
 
         // main horizontal layout
@@ -66,13 +71,15 @@ public class GUI extends Application {
         Label bluePlayerLabel = new Label("Blue player");
         bluePlayerLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-        // TODO: Only allow one radio button to be selected at a time
-        RadioButton humanRadio = new RadioButton("Human");
-        humanRadio.setSelected(true);
-        RadioButton computerRadio = new RadioButton("Computer");
-        // TODO: create GUI feature to input S or O
+        RadioButton sRadio = new RadioButton("S");
+        sRadio.setSelected(true);
+        RadioButton oRadio = new RadioButton("O");
 
-        bluePanel.getChildren().addAll(bluePlayerLabel, humanRadio, computerRadio);
+        ToggleGroup group = new ToggleGroup();
+        sRadio.setToggleGroup(group);
+        oRadio.setToggleGroup(group);
+
+        bluePanel.getChildren().addAll(bluePlayerLabel, sRadio, oRadio);
         return bluePanel;
     }
 
@@ -109,18 +116,33 @@ public class GUI extends Application {
         middleSection.setAlignment(Pos.CENTER);
         Label redPlayerLabel = new Label("Red player");
         redPlayerLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-        // TODO: Only allow one radio button to be selected at a time
-        RadioButton humanRadio = new RadioButton("Human");
-        RadioButton computerRadio = new RadioButton("Computer");
-        // TODO: create GUI feature to input S or O
-        computerRadio.setSelected(true);
-        middleSection.getChildren().addAll(redPlayerLabel, humanRadio, computerRadio);
+
+        RadioButton sRadio = new RadioButton("S");
+        RadioButton oRadio = new RadioButton("O");
+        sRadio.setSelected(true);
+
+        ToggleGroup group = new ToggleGroup();
+        sRadio.setToggleGroup(group);
+        oRadio.setToggleGroup(group);
+        middleSection.getChildren().addAll(redPlayerLabel, sRadio, oRadio);
 
         // lower third section
         VBox bottomSection = new VBox();
         bottomSection.setAlignment(Pos.CENTER);
         Button replayButton = new Button("Replay");
         Button newGameButton = new Button("New Game");
+
+        newGameButton.setOnAction(e -> {
+            try {
+                int newSize = Integer.parseInt(boardSizeField.getText());
+                console.startNewGame(newSize, grid);
+            } catch (NumberFormatException ex) {
+                showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
+            } catch (IllegalArgumentException ex) {
+                showAlert("Invalid size", ex.getMessage());
+            }
+        });
+        
         bottomSection.getChildren().addAll(replayButton, newGameButton);
 
         VBox.setVgrow(topSection, Priority.ALWAYS);
@@ -140,6 +162,15 @@ public class GUI extends Application {
         cell.setText(String.valueOf(letter));
         System.out.println(letter + " placed at (" + r + ", " + c + ")");
     }
+
+    private static void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
 
     private static GridPane getGridPane() {
         GridPane grid = new GridPane();

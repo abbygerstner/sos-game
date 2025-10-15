@@ -7,7 +7,10 @@ public class Board {
 
     public Board(int size) {
         if (size < 3) {
-            throw new IllegalArgumentException("Board size must be at least 3.");
+            throw new IllegalArgumentException("Board size must be at least 3x3.");
+        }
+        if (size > 10) {
+            throw new IllegalArgumentException("Board size cannot be larger than 10x10.");
         }
         this.size = size;
         this.grid= new char[size][size];
