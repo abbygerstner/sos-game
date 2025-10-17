@@ -1,11 +1,12 @@
 package org.sosgame.sprint2;
 
-import javafx.application.Application;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.geometry.Pos;
 
 public class Console {
     private Board board;
+    private String currentPlayer = "Red";
 
     public Console(Board board) {
         this.board = board;
@@ -16,27 +17,38 @@ public class Console {
             throw new IllegalArgumentException("Board size must be between 3 and 10.");
         }
 
-        // create new board
-        board = new Board(size);
-
-        // rebuild grid
+        this.board = new Board(size);
         grid.getChildren().clear();
+
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 Label cell = new Label(" ");
                 cell.setMinSize(50, 50);
-                cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
                 cell.setAlignment(javafx.geometry.Pos.CENTER);
+                cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
 
                 final int r = row;
                 final int c = col;
-                cell.setOnMouseClicked(e -> {
-                    board.placeLetter(r, c, 'S'); // S is a placeholder
-                    cell.setText(String.valueOf(board.getCell(r, c)));
-                });
 
+                cell.setOnMouseClicked(e -> handleCellClick(cell, r, c));
                 grid.add(cell, col, row);
             }
         }
+    }
+
+    private void handleCellClick(Label cell, int row, int col) {
+        // TODO: GUI will set letter and style, check SOS patterns, update scores
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public String getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void switchTurn() {
+        currentPlayer = currentPlayer.equals("Red") ? "Blue" : "Red";
     }
 }
