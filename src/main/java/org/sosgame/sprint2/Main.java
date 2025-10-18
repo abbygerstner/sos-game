@@ -1,5 +1,4 @@
-package org.sosgame.sprint0;
-import org.sosgame.sprint2.GUI;
+package org.sosgame.sprint2;
 import static javafx.application.Application.launch;
 
 public class Main {
