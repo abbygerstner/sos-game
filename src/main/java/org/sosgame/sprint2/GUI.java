@@ -39,9 +39,20 @@ public class GUI extends Application {
 
         RadioButton simpleRadio = new RadioButton("Simple Game");
         RadioButton generalRadio = new RadioButton("General Game");
-        ToggleGroup group = new ToggleGroup();
-        simpleRadio.setToggleGroup(group);
-        generalRadio.setToggleGroup(group);
+        ToggleGroup gameModeGroup = new ToggleGroup();
+        simpleRadio.setToggleGroup(gameModeGroup);
+        generalRadio.setToggleGroup(gameModeGroup);
+
+        simpleRadio.setSelected(true);
+
+        // Listen for selection changes
+        gameModeGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+            if (newToggle == simpleRadio) {
+                board.setGameMode(Board.GameMode.SIMPLE);
+            } else if (newToggle == generalRadio) {
+                board.setGameMode(Board.GameMode.GENERAL);
+            }
+        });
 
         // three main vertical panels
         VBox leftPanel = createBluePlayerPanel();
@@ -134,11 +145,13 @@ public class GUI extends Application {
         newGameButton.setOnAction(e -> {
             try {
                 int newSize = Integer.parseInt(boardSizeField.getText());
-                console.startNewGame(newSize, grid);
+                if (!board.setBoardSize(newSize)) {
+                    showAlert("Invalid size", board.getErrorMessage());
+                } else {
+                    console.startNewGame(newSize, grid);
+                }
             } catch (NumberFormatException ex) {
                 showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
-            } catch (IllegalArgumentException ex) {
-                showAlert("Invalid size", ex.getMessage());
             }
         });
 
