@@ -20,6 +20,7 @@ public class GUI extends Application {
     private static ToggleGroup redGroup;
     private static Label currentTurnLabel;
     private static HBox root;
+    private static Console.GameMode gameMode;
 
 @Override
     public void start(Stage primaryStage) {
@@ -48,9 +49,9 @@ public class GUI extends Application {
         // Listen for selection changes
         gameModeGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle == simpleRadio) {
-                board.setGameMode(Board.GameMode.SIMPLE);
+                console.setGameMode(Console.GameMode.SIMPLE);
             } else if (newToggle == generalRadio) {
-                board.setGameMode(Board.GameMode.GENERAL);
+                console.setGameMode(Console.GameMode.GENERAL);
             }
         });
 
@@ -63,7 +64,7 @@ public class GUI extends Application {
         root = new HBox(30, leftPanel, centerPanel, rightPanel);
             root.setAlignment(Pos.CENTER);
             root.setPadding(new Insets(20));
-//            root.setStyle("-fx-background-color: #f0f0f0;"); // TODO: add background color change depending on current player
+            root.setStyle("-fx-background-color: #f0f0f0;"); // TODO: add background color for initial current player
 
         // scene and stage
         Scene scene = new Scene(root);
@@ -145,11 +146,12 @@ public class GUI extends Application {
         newGameButton.setOnAction(e -> {
             try {
                 int newSize = Integer.parseInt(boardSizeField.getText());
-                if (!board.setBoardSize(newSize)) {
-                    showAlert("Invalid size", board.getErrorMessage());
-                } else {
-                    console.startNewGame(newSize, grid);
-                }
+                console.startNewGame(newSize, gameMode);
+
+                // rebuild grid with new board
+                root.getChildren().remove(grid);
+                grid = getGridPane();
+                root.getChildren().add(1, grid); // center panel is index 1
             } catch (NumberFormatException ex) {
                 showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
             }
@@ -165,30 +167,6 @@ public class GUI extends Application {
         return redPanel;
     }
 
-    /** Creates initial board grid **/
-    private GridPane createGridPane() {
-        GridPane grid = new GridPane();
-        grid.setGridLinesVisible(true);
-        grid.setHgap(2);
-        grid.setVgap(2);
-        grid.setAlignment(Pos.CENTER);
-
-        for (int row = 0; row < board.getSize(); row++) {
-            for (int col = 0; col < board.getSize(); col++) {
-                Label cell = new Label(" ");
-                cell.setMinSize(50, 50);
-                cell.setAlignment(Pos.CENTER);
-                cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
-
-                final int r = row;
-                final int c = col;
-                cell.setOnMouseClicked(event -> handleCellClick(cell, r, c));
-                grid.add(cell, col, row);
-            }
-        }
-        return grid;
-    }
-
     private static void handleCellClick(Label cell, int row, int col) {
         if (!board.isEmpty(row, col)) return; // if already filled, ignore
 
@@ -202,21 +180,20 @@ public class GUI extends Application {
             return;
         }
 
-        if (board.isEmpty(row, col)) {
-            char letter = currentPlayer.equals("Red")
-                    ? ((RadioButton) redGroup.getSelectedToggle()).getText().charAt(0)
-                    : ((RadioButton) blueGroup.getSelectedToggle()).getText().charAt(0);
-            board.placeLetter(row, col, letter);
+        char letter = selectedButton.getText().charAt(0);
+        boolean success = console.handleCellClick(row, col, letter);
+
+        if (success) {
             cell.setText(String.valueOf(letter));
 
             // change background color based on player
             String color = currentPlayer.equals("Red") ? "#cce0ff": "#ffcccc";
             root.setStyle("-fx-background-color: " + color + ";");
 
-            // switch turns
-            console.switchTurn();
             currentPlayer = console.getCurrentPlayer();
             currentTurnLabel.setText("Current Turn: " + currentPlayer);
+        } else {
+            showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
         }
     }
 
@@ -235,7 +212,6 @@ public class GUI extends Application {
         grid.setVgap(2);
         grid.setAlignment(Pos.CENTER);
 
-        // TODO: Edit for loop to take input of boardSizeField textfield and create board
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 Label cell = new Label(" ");
@@ -243,7 +219,6 @@ public class GUI extends Application {
                 cell.setAlignment(Pos.CENTER);
                 cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
 
-                // store coordinates as user data
                 final int r = row;
                 final int c = col;
 

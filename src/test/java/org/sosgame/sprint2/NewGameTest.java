@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 
 public class NewGameTest {
     private Board board;
+    private Console console;
     @BeforeEach
     public void setUp() {
         board = new Board(5);
+        console = new Console(board);
     }
 
     // AC 1.1
@@ -69,14 +71,14 @@ public class NewGameTest {
 
     @Test
     void testSelectSimpleGameMode() {
-        board.setGameMode(Board.GameMode.SIMPLE);
-        assertEquals(Board.GameMode.SIMPLE, board.getGameMode());
+        console.setGameMode(Console.GameMode.SIMPLE);
+        assertEquals(Console.GameMode.SIMPLE, console.getGameMode());
     }
 
     @Test
     void testSelectGeneralGameMode() {
-        board.setGameMode(Board.GameMode.GENERAL);
-        assertEquals(Board.GameMode.GENERAL, board.getGameMode());
+        console.setGameMode(Console.GameMode.GENERAL);
+        assertEquals(Console.GameMode.GENERAL, console.getGameMode());
     }
 
 }
