@@ -14,7 +14,7 @@ public class NewGameTest {
         console = new Console(board);
     }
 
-    // AC 1.1
+    // AC 1.1: Player selects valid board size
     @Test
     void testValidBoardSizeSelection() {
         // Given: the player is on the home screen (board initialized)
@@ -31,7 +31,7 @@ public class NewGameTest {
                 "No error message should be shown for a valid board size.");
     }
 
-    // AC 1.2
+    // AC 1.2: Player selects invalid board size
     @Test
     void testInvalidBoardSizeTooSmall() {
         // Given
@@ -48,7 +48,7 @@ public class NewGameTest {
                 "Board size should not be updated to an invalid value.");
     }
 
-    // AC 1.2
+    // AC 1.2: Player selects invalid board size
     @Test
     void testInvalidBoardSizeTooLarge() {
         int invalidSize = 11;
@@ -60,7 +60,7 @@ public class NewGameTest {
                 "Board size should not be updated to an invalid value.");
     }
 
-    // AC 1.3
+    // AC 1.2
     @Test
     void testEdgeCasesBoundaryValues() {
         assertTrue(board.setBoardSize(3), "Board size of 3 should be valid.");
@@ -69,12 +69,14 @@ public class NewGameTest {
         assertEquals(10, board.getSize());
     }
 
+    // AC 2.1: Player selects simple game
     @Test
     void testSelectSimpleGameMode() {
         console.setGameMode(Console.GameMode.SIMPLE);
         assertEquals(Console.GameMode.SIMPLE, console.getGameMode());
     }
 
+    // AC 2.2: Player selects general game
     @Test
     void testSelectGeneralGameMode() {
         console.setGameMode(Console.GameMode.GENERAL);
