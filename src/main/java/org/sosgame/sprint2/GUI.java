@@ -20,6 +20,7 @@ public class GUI extends Application {
     private static ToggleGroup redGroup;
     private static Label currentTurnLabel;
     private static HBox root;
+    private static VBox centerPanel;
     private static Console.GameMode gameMode;
 
 @Override
@@ -45,19 +46,23 @@ public class GUI extends Application {
         generalRadio.setToggleGroup(gameModeGroup);
 
         simpleRadio.setSelected(true);
+        console.setGameMode(Console.GameMode.SIMPLE);
+        gameMode = Console.GameMode.SIMPLE;
 
         // Listen for selection changes
         gameModeGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle == simpleRadio) {
+                gameMode = Console.GameMode.SIMPLE;
                 console.setGameMode(Console.GameMode.SIMPLE);
             } else if (newToggle == generalRadio) {
+                gameMode = Console.GameMode.GENERAL;
                 console.setGameMode(Console.GameMode.GENERAL);
             }
         });
 
         // three main vertical panels
         VBox leftPanel = createBluePlayerPanel();
-        VBox centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
+        centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
         VBox rightPanel = createRedPlayerPanel(currentTurnLabel);
 
         // main horizontal layout
@@ -141,21 +146,7 @@ public class GUI extends Application {
         VBox bottomSection = new VBox();
         bottomSection.setAlignment(Pos.CENTER);
         Button replayButton = new Button("Replay");
-        Button newGameButton = new Button("New Game");
-
-        newGameButton.setOnAction(e -> {
-            try {
-                int newSize = Integer.parseInt(boardSizeField.getText());
-                console.startNewGame(newSize, gameMode);
-
-                // rebuild grid with new board
-                root.getChildren().remove(grid);
-                grid = getGridPane();
-                root.getChildren().add(1, grid); // center panel is index 1
-            } catch (NumberFormatException ex) {
-                showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
-            }
-        });
+        Button newGameButton = getButton(boardSizeField);
 
         bottomSection.getChildren().addAll(replayButton, newGameButton);
 
@@ -165,6 +156,32 @@ public class GUI extends Application {
 
         redPanel.getChildren().addAll(topSection, middleSection, bottomSection);
         return redPanel;
+    }
+
+    private static Button getButton(TextField boardSizeField) {
+        Button newGameButton = new Button("New Game");
+
+        newGameButton.setOnAction(e -> {
+            try {
+                int newSize;
+
+                if (boardSizeField.getText().isEmpty()) {
+                    newSize = 8;
+                } else {
+                    newSize = Integer.parseInt(boardSizeField.getText());
+                }
+                console.startNewGame(newSize, gameMode);
+
+                board = new Board(newSize);
+                grid = getGridPane();
+
+                centerPanel.getChildren().set(1,grid);
+
+            } catch (NumberFormatException ex) {
+                showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
+            }
+        });
+        return newGameButton;
     }
 
     private static void handleCellClick(Label cell, int row, int col) {

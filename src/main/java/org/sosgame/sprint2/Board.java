@@ -3,17 +3,12 @@ package org.sosgame.sprint2;
 public class Board {
     private int size;
     private char[][] grid;
-//    private GameMode gameMode;
     private String errorMessage;
 
     public Board(int size) {
         setBoardSize(size);
-//        this.gameMode = GameMode.SIMPLE; // default
     }
 
-//    public GameMode getGameMode() {
-//        return gameMode;
-//    }
 
     /** Sets board size between 3 and 10, returns true if successful, false if unsuccessful **/
     public boolean setBoardSize(int size) {
@@ -31,10 +26,6 @@ public class Board {
     public int getSize() {
         return size;
     }
-
-//    public void setGameMode(GameMode gameMode) {
-//        this.gameMode = gameMode;
-//    }
 
     public String getErrorMessage() {
         return errorMessage;
