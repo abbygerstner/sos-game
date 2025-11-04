@@ -13,8 +13,18 @@ public class SimpleSOSGame extends SOSGame {
         if (seq != null) {
             gameInProgress = false;
             winner = currentPlayer;
-            GUI.highlightSOS(seq);
-            javafx.application.Platform.runLater(() -> GUI.showWinScreenStatic(currentPlayer));
+            if (listener != null) {
+                listener.onGameOver(winner);
+            }
+            return true;
+        }
+        // Otherwise, check if the board is full -> tie
+        if (board.isBoardFull()) {
+            gameInProgress = false;
+            winner = "Draw"; // No winner, tie
+            if (listener != null) {
+                listener.onGameOver(winner);
+            }
             return true;
         }
         return false;

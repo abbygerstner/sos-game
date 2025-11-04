@@ -35,11 +35,27 @@ public class Console {
     }
 
     public boolean handleCellClick(int row, int col, char letter) {
-        if (sosGame == null) return false; // invalid move
+        if (sosGame == null) return false;
         return sosGame.makeMove(row, col, letter);
     }
 
     public boolean isGameInProgress() {
         return sosGame != null && sosGame.isGameInProgress();
+    }
+
+    public boolean isSimpleGame() {
+        return sosGame instanceof SimpleSOSGame;
+    }
+
+    public boolean isGeneralGame() {
+        return sosGame instanceof GeneralSOSGame;
+    }
+
+    public GeneralSOSGame getGeneralGame() {
+        return (sosGame instanceof GeneralSOSGame) ? (GeneralSOSGame) sosGame : null;
+    }
+
+    public SimpleSOSGame getSimpleGame() {
+        return (sosGame instanceof SimpleSOSGame) ? (SimpleSOSGame) sosGame : null;
     }
 }

@@ -5,6 +5,7 @@ public abstract class SOSGame {
     protected String currentPlayer;
     protected boolean gameInProgress;
     protected String winner;
+    protected GameEventListener listener;
 
     public SOSGame(int size) {
         this.board = new Board(size);
@@ -37,6 +38,10 @@ public abstract class SOSGame {
     }
 
     public String getWinner() { return winner; }
+    
+    public void setListener(GameEventListener listener) {
+        this.listener = listener;
+    }
 
     public boolean isGameInProgress() {
         return gameInProgress;

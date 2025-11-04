@@ -15,20 +15,25 @@ public class GeneralSOSGame extends SOSGame {
     protected boolean checkWinner(int row, int col) {
         List<SOSSequence> sequences = countSOS(row, col);
 
-        for (SOSSequence seq : sequences) {
-            GUI.highlightSOS(seq);
-        }
-
         if (!sequences.isEmpty()) {
+            // Update scores
             if (currentPlayer.equals("Red")) redScore += sequences.size();
             else blueScore += sequences.size();
+
+            // Notify listener to highlight SOS
+            if (listener != null) {
+                listener.onSOSFormed(sequences);
+            }
         }
 
-        // End game if board is full
-        if (isBoardFull()) {
+        // End game if full
+        if (board.isBoardFull()) {
             gameInProgress = false;
             winner = declareWinner();
-            javafx.application.Platform.runLater(() -> GUI.showWinScreenStatic(winner));
+
+            if (listener != null) {
+                listener.onGameOver(winner);
+            }
         }
 
         // If player scored, they get another turn
@@ -83,20 +88,10 @@ public class GeneralSOSGame extends SOSGame {
         return list;
     }
 
-
-    private boolean isBoardFull() {
-        for (int i = 0; i < board.getSize(); i++) {
-            for (int j = 0; j < board.getSize(); j++) {
-                if (board.isEmpty(i, j)) return false;
-            }
-        }
-        return true;
-    }
-
     private String declareWinner() {
         if (redScore > blueScore) return "Red";
         else if (blueScore > redScore) return "Blue";
-        else winner = "No one (Tie)";
+        else winner = "Draw";
         return winner;
     }
 

@@ -48,4 +48,13 @@ public class Board {
     public char[][] getGrid() {
         return grid;
     }
+
+    public boolean isBoardFull() {
+        for (int i = 0; i < getSize(); i++) {
+            for (int j = 0; j < getSize(); j++) {
+                if (isEmpty(i, j)) return false;
+            }
+        }
+        return true;
+    }
 }

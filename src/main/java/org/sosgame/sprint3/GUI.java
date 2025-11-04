@@ -1,5 +1,6 @@
 package org.sosgame.sprint3;
 
+import com.sun.javafx.image.impl.General;
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.geometry.*;
@@ -9,12 +10,15 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.List;
+
 public class GUI extends Application {
     private GridPane grid;
     private Console console;
     private ToggleGroup blueGroup;
     private ToggleGroup redGroup;
     private Label currentTurnLabel;
+    private Label scoreLabel;
     private HBox root;
     private VBox centerPanel;
     private Console.GameMode gameMode = Console.GameMode.SIMPLE;
@@ -93,6 +97,34 @@ public class GUI extends Application {
         }
 
         SOSGame game = console.getGame();
+        game.setListener(new GameEventListener() {
+            @Override
+            public void onSOSFormed(List<SOSGame.SOSSequence> sequences) {
+                // Highlight on the board
+                javafx.application.Platform.runLater(() -> {
+                    for (SOSGame.SOSSequence seq : sequences) {
+                        GUI.highlightSOS(seq);
+                    }
+
+                    // Update score if General game
+                    if (game instanceof GeneralSOSGame g) {
+                        scoreLabel.setText("Score — Red: " + g.getRedScore() + " | Blue: " + g.getBlueScore());
+                    }
+                });
+            }
+
+            @Override
+            public void onGameOver(String winner) {
+                javafx.application.Platform.runLater(() -> {
+                    if ("Draw".equals(winner)) {
+                        GUI.showTieScreenStatic(); // separate tie screen
+                    } else {
+                        GUI.showWinScreenStatic(winner);
+                    }
+                });
+            }
+        });
+
         Board board = game.getBoard();
 
         // Dynamic title based on mode
@@ -108,17 +140,20 @@ public class GUI extends Application {
 
         currentTurnLabel = new Label("Current Turn: " + game.getCurrentPlayer());
 
+        scoreLabel = new Label();
+        scoreLabel.setText("Score — Red: 0 | Blue: 0");
+
         // Radio buttons to switch mode (if desired mid-game)
-        RadioButton simpleRadio = new RadioButton("Simple Game");
-        RadioButton generalRadio = new RadioButton("General Game");
-        ToggleGroup modeGroup = new ToggleGroup();
-        simpleRadio.setToggleGroup(modeGroup);
-        generalRadio.setToggleGroup(modeGroup);
-        simpleRadio.setSelected(gameMode == Console.GameMode.SIMPLE);
-        generalRadio.setSelected(gameMode == Console.GameMode.GENERAL);
+//        RadioButton simpleRadio = new RadioButton("Simple Game");
+//        RadioButton generalRadio = new RadioButton("General Game");
+//        ToggleGroup modeGroup = new ToggleGroup();
+//        simpleRadio.setToggleGroup(modeGroup);
+//        generalRadio.setToggleGroup(modeGroup);
+//        simpleRadio.setSelected(gameMode == Console.GameMode.SIMPLE);
+//        generalRadio.setSelected(gameMode == Console.GameMode.GENERAL);
 
         VBox leftPanel = createBluePlayerPanel();
-        centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
+        centerPanel = createCenterPanel(titleLabel, scoreLabel, grid, currentTurnLabel);
         VBox rightPanel = createRedPlayerPanel();
 
         Button newGameButton = new Button("New Game");
@@ -153,8 +188,8 @@ public class GUI extends Application {
         return panel;
     }
 
-    private VBox createCenterPanel(Label title, GridPane grid, Label turn, RadioButton r1, RadioButton r2) {
-        VBox panel = new VBox(20, title, grid, turn, r1, r2);
+    private VBox createCenterPanel(Label title, Label scoreLabel, GridPane grid, Label turn) {
+        VBox panel = new VBox(20, title, grid, turn);
         panel.setAlignment(Pos.CENTER);
         return panel;
     }
@@ -219,7 +254,11 @@ public class GUI extends Application {
 
             // If general mode, also update score
             if (console.getGame() instanceof GeneralSOSGame g) {
-                System.out.println("Red: " + g.getRedScore() + " | Blue: " + g.getBlueScore());
+//                System.out.println("Red: " + g.getRedScore() + " | Blue: " + g.getBlueScore());
+                GeneralSOSGame game = console.getGeneralGame();
+                int redScore = game.getRedScore();
+                int blueScore = game.getBlueScore();
+                scoreLabel.setText("Score — Red: " + redScore + " | Blue: " + blueScore);
             }
         }
     }
@@ -304,4 +343,23 @@ public class GUI extends Application {
         Scene winScene = new Scene(layout, 800, 600);
         primaryStage.setScene(winScene);
     }
+
+    public static void showTieScreenStatic() {
+        if (instance != null) instance.showTieScreen();
+    }
+
+    private void showTieScreen() {
+        Label tieLabel = new Label("It's a Tie!");
+        tieLabel.setStyle("-fx-font-size: 36px; -fx-font-weight: bold;");
+
+        Button playAgain = new Button("Play Again");
+        playAgain.setOnAction(e -> showLandingScreen());
+
+        VBox layout = new VBox(30, tieLabel, playAgain);
+        layout.setAlignment(Pos.CENTER);
+
+        Scene tieScene = new Scene(layout, 800, 600);
+        primaryStage.setScene(tieScene);
+    }
+
 }
