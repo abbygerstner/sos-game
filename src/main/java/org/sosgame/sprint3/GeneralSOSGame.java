@@ -1,5 +1,8 @@
 package org.sosgame.sprint3;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GeneralSOSGame extends SOSGame {
     private int redScore = 0;
     private int blueScore = 0;
@@ -10,41 +13,76 @@ public class GeneralSOSGame extends SOSGame {
 
     @Override
     protected boolean checkWinner(int row, int col) {
-        int points = countSOS(row, col);
-        if (points > 0) {
-            if (currentPlayer.equals("Red")) redScore += points;
-            else blueScore += points;
+        List<SOSSequence> sequences = countSOS(row, col);
+
+        for (SOSSequence seq : sequences) {
+            GUI.highlightSOS(seq);
+        }
+
+        if (!sequences.isEmpty()) {
+            if (currentPlayer.equals("Red")) redScore += sequences.size();
+            else blueScore += sequences.size();
         }
 
         // End game if board is full
         if (isBoardFull()) {
             gameInProgress = false;
-            declareWinner();
+            winner = declareWinner();
+            javafx.application.Platform.runLater(() -> GUI.showWinScreenStatic(winner));
         }
 
         // If player scored, they get another turn
-        return points > 0;
+        return !sequences.isEmpty();
     }
 
-    private int countSOS(int row, int col) {
-        int count = 0;
+    private List<SOSSequence> countSOS(int row, int col) {
+        List<SOSSequence> list = new ArrayList<>();
         char[][] g = board.getGrid();
         int n = board.getSize();
-        int[][] directions = {
-                {0, 1}, {1, 0}, {1, 1}, {1, -1}
-        };
+        // All directions that SOS can be placed
+        int[][] dirs = {{0,1}, {1,0}, {1,1}, {1,-1}};
 
-        for (int[] d : directions) {
-            int r = row - d[0], c = col - d[1];
-            int r2 = row + d[0], c2 = col + d[1];
-            if (r >= 0 && c >= 0 && r2 < n && c2 < n) {
-                if (g[r][c] == 'S' && g[row][col] == 'O' && g[r2][c2] == 'S') {
-                    count++;
+        char placed = Character.toUpperCase(g[row][col]);
+
+        for (int[] d : dirs) {
+            int dr = d[0], dc = d[1];
+
+            // Case 1: Middle O case
+            int mR1 = row - dr, mC1 = col - dc;
+            int mR3 = row + dr, mC3 = col + dc;
+            if (inBounds(mR1,mC1,n) && inBounds(mR3,mC3,n)) {
+                if (Character.toUpperCase(g[mR1][mC1]) == 'S' &&
+                        placed == 'O' &&
+                        Character.toUpperCase(g[mR3][mC3]) == 'S') {
+                    list.add(new SOSSequence(mR1, mC1, row, col, mR3, mC3, currentPlayer));
+                }
+            }
+
+            // Case 2: placed as first S
+            int fR1 = row + dr, fC1 = col + dc;
+            int fR2 = row + 2*dr, fC2 = col + 2*dc;
+            if (inBounds(fR1,fC1,n) && inBounds(fR2,fC2,n)) {
+                if (placed == 'S' &&
+                        Character.toUpperCase(g[fR1][fC1]) == 'O' &&
+                        Character.toUpperCase(g[fR2][fC2]) == 'S') {
+                    list.add(new SOSSequence(row, col, fR1, fC1, fR2, fC2, currentPlayer));
+                }
+            }
+
+            // Case 3: placed as last S: two behind, one behind, placed
+            int lR1 = row - 2*dr, lC1 = col - 2*dc;
+            int lR2 = row - dr,  lC2 = col - dc;
+            if (inBounds(lR1,lC1,n) && inBounds(lR2,lC2,n)) {
+                if (Character.toUpperCase(g[lR1][lC1]) == 'S' &&
+                        Character.toUpperCase(g[lR2][lC2]) == 'O' &&
+                        placed == 'S') {
+                    list.add(new SOSSequence(lR1, lC1, lR2, lC2, row, col, currentPlayer));
                 }
             }
         }
-        return count;
+        return list;
     }
+
 
     private boolean isBoardFull() {
         for (int i = 0; i < board.getSize(); i++) {
@@ -55,13 +93,11 @@ public class GeneralSOSGame extends SOSGame {
         return true;
     }
 
-    private void declareWinner() {
-        if (redScore > blueScore)
-            System.out.println("Red wins " + redScore + " to " + blueScore);
-        else if (blueScore > redScore)
-            System.out.println("Blue wins " + blueScore + " to " + redScore);
-        else
-            System.out.println("It's a tie!");
+    private String declareWinner() {
+        if (redScore > blueScore) return "Red";
+        else if (blueScore > redScore) return "Blue";
+        else winner = "No one (Tie)";
+        return winner;
     }
 
     public int getRedScore() { return redScore; }

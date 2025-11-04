@@ -18,6 +18,10 @@ public class Console {
             sosGame = new GeneralSOSGame(size);
     }
 
+    public void setGame(SOSGame game) {
+        this.sosGame = game;
+    }
+
     public SOSGame getGame() {
         return sosGame;
     }
@@ -34,14 +38,6 @@ public class Console {
         if (sosGame == null) return false; // invalid move
         return sosGame.makeMove(row, col, letter);
     }
-
-//    public GameMode getGameMode() {
-//        return gameMode;
-//    }
-//
-//    public void setGameMode(GameMode gameMode) {
-//        this.gameMode = gameMode;
-//    }
 
     public boolean isGameInProgress() {
         return sosGame != null && sosGame.isGameInProgress();

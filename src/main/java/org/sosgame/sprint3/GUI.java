@@ -1,195 +1,198 @@
 package org.sosgame.sprint3;
 
+import javafx.animation.*;
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.geometry.*;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class GUI extends Application {
-//    private static Board board;
-    private static GridPane grid;
-    private static Console console;
-    private static String currentPlayer = "Red";
-    private static ToggleGroup blueGroup;
-    private static ToggleGroup redGroup;
-    private static Label currentTurnLabel;
-    private static HBox root;
-    private static VBox centerPanel;
-    private static Console.GameMode gameMode;
+    private GridPane grid;
+    private Console console;
+    private ToggleGroup blueGroup;
+    private ToggleGroup redGroup;
+    private Label currentTurnLabel;
+    private HBox root;
+    private VBox centerPanel;
+    private Console.GameMode gameMode = Console.GameMode.SIMPLE;
+    private Stage primaryStage;
+    public static GUI instance;
 
-@Override
+    private int boardSize = 8; // default
+
+    @Override
     public void start(Stage primaryStage) {
-        //TODO: create new overall theme with custom font
-        //TODO: create landing page for when app is opened, click play button to get to game screen
-        //TODO: create "get help" with popup explaining how to play when app is opened
-        Label titleLabel = new Label("SOS Game");
-            titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-            titleLabel.setPrefHeight(50);
-
-        // board setup
+        instance = this;
+        this.primaryStage = primaryStage;
         console = new Console();
-        console.initiateGame(8, Console.GameMode.SIMPLE);
-        grid = getGridPane(console.getBoard());
+        showLandingScreen();
+    }
 
-        currentTurnLabel = new Label("Current Turn: Red");
+    private void showLandingScreen() {
+        Label title = new Label("Welcome to SOS!");
+        title.setStyle("-fx-font-size: 30px; -fx-font-weight: bold;");
 
+        // Game mode selection
         RadioButton simpleRadio = new RadioButton("Simple Game");
         RadioButton generalRadio = new RadioButton("General Game");
         ToggleGroup gameModeGroup = new ToggleGroup();
         simpleRadio.setToggleGroup(gameModeGroup);
         generalRadio.setToggleGroup(gameModeGroup);
-
         simpleRadio.setSelected(true);
-        gameMode = Console.GameMode.SIMPLE;
 
-        // Listen for selection changes
-        gameModeGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle == simpleRadio) {
-                gameMode = Console.GameMode.SIMPLE;
-            } else if (newToggle == generalRadio) {
-                gameMode = Console.GameMode.GENERAL;
-            }
+        gameModeGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
+            gameMode = (selected == generalRadio) ? Console.GameMode.GENERAL : Console.GameMode.SIMPLE;
         });
 
-        // three main vertical panels
-        VBox leftPanel = createBluePlayerPanel();
-        centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
-        VBox rightPanel = createRedPlayerPanel(currentTurnLabel);
+        // Board size input
+        Label sizeLabel = new Label("Board Size (3–10):");
+        TextField sizeField = new TextField("8");
+        sizeField.setMaxWidth(50);
 
-        // main horizontal layout
-        root = new HBox(30, leftPanel, centerPanel, rightPanel);
-            root.setAlignment(Pos.CENTER);
-            root.setPadding(new Insets(20));
-            root.setStyle("-fx-background-color: #f0f0f0;"); // TODO: add background color for initial current player
-
-        // scene and stage
-        Scene scene = new Scene(root);
-        primaryStage.setTitle("SOS Game");
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(true);
-        primaryStage.show();
-    }
-
-    /** Blue player panel **/
-    private VBox createBluePlayerPanel() {
-        VBox bluePanel = new VBox(15);
-        bluePanel.setAlignment(Pos.CENTER);
-        bluePanel.setPrefWidth(200);
-
-        Label bluePlayerLabel = new Label("Blue player");
-        bluePlayerLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-        RadioButton sRadio = new RadioButton("S");
-        sRadio.setSelected(true);
-        RadioButton oRadio = new RadioButton("O");
-
-        blueGroup = new ToggleGroup();
-        sRadio.setToggleGroup(blueGroup);
-        oRadio.setToggleGroup(blueGroup);
-
-        bluePanel.getChildren().addAll(bluePlayerLabel, sRadio, oRadio);
-        return bluePanel;
-    }
-
-    /** center section with title, board, mode **/
-    private VBox createCenterPanel(Label titleLabel, GridPane grid, Label currentTurnLabel, RadioButton radiobutton, RadioButton radiobutton2) {
-        VBox centerPanel = new VBox(20, titleLabel, grid, currentTurnLabel, radiobutton, radiobutton2);
-        centerPanel.setAlignment(Pos.CENTER);
-        return centerPanel;
-    }
-
-    /** Red player panel with board size and control buttons **/
-    private VBox createRedPlayerPanel(Label currentTurnLabel) {
-        VBox redPanel = new VBox(15);
-        redPanel.setAlignment(Pos.CENTER);
-        redPanel.setPrefWidth(200);
-
-        // top third section
-        VBox topSection = new VBox(10);
-        topSection.setAlignment(Pos.CENTER);
-        HBox boardSizeBox = new HBox(5);
-        boardSizeBox.setAlignment(Pos.CENTER);
-        Label boardSizeLabel = new Label("Board size");
-        TextField boardSizeField = new TextField();
-        boardSizeField.setPrefWidth(30);
-        boardSizeField.setPrefHeight(25);
-        boardSizeField.setMaxWidth(30);
-        boardSizeBox.getChildren().addAll(boardSizeLabel, boardSizeField);
-
-        topSection.getChildren().add(boardSizeBox);
-
-        // middle third section
-        VBox middleSection = new VBox(10);
-        middleSection.setAlignment(Pos.CENTER);
-        Label redPlayerLabel = new Label("Red player");
-        redPlayerLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-        RadioButton sRadio = new RadioButton("S");
-        RadioButton oRadio = new RadioButton("O");
-        sRadio.setSelected(true);
-
-        redGroup = new ToggleGroup();
-        sRadio.setToggleGroup(redGroup);
-        oRadio.setToggleGroup(redGroup);
-        middleSection.getChildren().addAll(redPlayerLabel, sRadio, oRadio);
-
-        // lower third section
-        VBox bottomSection = new VBox();
-        bottomSection.setAlignment(Pos.CENTER);
-        Button replayButton = new Button("Replay");
-        Button newGameButton = getButton(boardSizeField);
-
-        bottomSection.getChildren().addAll(replayButton, newGameButton);
-
-        VBox.setVgrow(topSection, Priority.ALWAYS);
-        VBox.setVgrow(middleSection, Priority.ALWAYS);
-        VBox.setVgrow(bottomSection, Priority.ALWAYS);
-
-        redPanel.getChildren().addAll(topSection, middleSection, bottomSection);
-        return redPanel;
-    }
-
-    private static Button getButton(TextField boardSizeField) {
-        Button newGameButton = new Button("New Game");
-
-        newGameButton.setOnAction(e -> {
+        // Start button
+        Button startButton = new Button("Start Game");
+        startButton.setOnAction(e -> {
             try {
-                int newSize;
-
-                if (boardSizeField.getText().isEmpty()) {
-                    newSize = 8;
-                } else {
-                    newSize = Integer.parseInt(boardSizeField.getText());
+                int size = Integer.parseInt(sizeField.getText());
+                Board tempBoard = new Board(size);
+                if (tempBoard.getErrorMessage() != null) {
+                    showAlert("Invalid size", tempBoard.getErrorMessage());
+                    return;
                 }
 
-                console.initiateGame(newSize, gameMode);
-                grid = getGridPane(console.getBoard());
-                centerPanel.getChildren().set(1,grid);
+                this.boardSize = size;
+                console.initiateGame(boardSize, gameMode);
+                showGameScreen();
 
             } catch (NumberFormatException ex) {
                 showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
             }
         });
-        return newGameButton;
+
+        VBox layout = new VBox(15, title, simpleRadio, generalRadio, sizeLabel, sizeField, startButton);
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #f7f9f9, #d0e6df);");
+        layout.setPadding(new Insets(40));
+
+        Scene scene = new Scene(layout, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("SOS Game");
+        primaryStage.show();
     }
 
-    private static void handleCellClick(Label cell, int row, int col) {
+    private void showGameScreen() {
+        if (console.getGame() == null) {
+            if (gameMode == Console.GameMode.SIMPLE) {
+                console.setGame(new SimpleSOSGame(boardSize));
+            } else {
+                console.setGame(new GeneralSOSGame(boardSize));
+            }
+        }
+
+        SOSGame game = console.getGame();
+        Board board = game.getBoard();
+
+        // Dynamic title based on mode
+        String titleText = (gameMode == Console.GameMode.SIMPLE)
+                ? "Simple SOS Game"
+                : "General SOS Game";
+
+        Label titleLabel = new Label(titleText);
+        titleLabel.setStyle("-fx-font-weight: bold;");
+        titleLabel.setPrefHeight(50);
+
+        grid = getGridPane(board);
+
+        currentTurnLabel = new Label("Current Turn: " + game.getCurrentPlayer());
+
+        // Radio buttons to switch mode (if desired mid-game)
+        RadioButton simpleRadio = new RadioButton("Simple Game");
+        RadioButton generalRadio = new RadioButton("General Game");
+        ToggleGroup modeGroup = new ToggleGroup();
+        simpleRadio.setToggleGroup(modeGroup);
+        generalRadio.setToggleGroup(modeGroup);
+        simpleRadio.setSelected(gameMode == Console.GameMode.SIMPLE);
+        generalRadio.setSelected(gameMode == Console.GameMode.GENERAL);
+
+        VBox leftPanel = createBluePlayerPanel();
+        centerPanel = createCenterPanel(titleLabel, grid, currentTurnLabel, simpleRadio, generalRadio);
+        VBox rightPanel = createRedPlayerPanel();
+
+        Button newGameButton = new Button("New Game");
+        newGameButton.setOnAction(e -> showLandingScreen());
+
+        root = new HBox(30, leftPanel, centerPanel, rightPanel);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(20));
+        root.setStyle("-fx-background-color: #f0f0f0;");
+
+        Scene gameScene = new Scene(root);
+        primaryStage.setScene(gameScene);
+        primaryStage.show();
+    }
+
+    private VBox createBluePlayerPanel() {
+        VBox panel = new VBox(15);
+        panel.setAlignment(Pos.CENTER);
+        panel.setPrefWidth(200);
+
+        Label label = new Label("Blue Player");
+        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        RadioButton sRadio = new RadioButton("S");
+        RadioButton oRadio = new RadioButton("O");
+        blueGroup = new ToggleGroup();
+        sRadio.setToggleGroup(blueGroup);
+        oRadio.setToggleGroup(blueGroup);
+        sRadio.setSelected(true);
+
+        panel.getChildren().addAll(label, sRadio, oRadio);
+        return panel;
+    }
+
+    private VBox createCenterPanel(Label title, GridPane grid, Label turn, RadioButton r1, RadioButton r2) {
+        VBox panel = new VBox(20, title, grid, turn, r1, r2);
+        panel.setAlignment(Pos.CENTER);
+        return panel;
+    }
+
+    private VBox createRedPlayerPanel() {
+        VBox panel = new VBox(15);
+        panel.setAlignment(Pos.CENTER);
+        panel.setPrefWidth(200);
+
+        Label label = new Label("Red Player");
+        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        RadioButton sRadio = new RadioButton("S");
+        RadioButton oRadio = new RadioButton("O");
+        redGroup = new ToggleGroup();
+        sRadio.setToggleGroup(redGroup);
+        oRadio.setToggleGroup(redGroup);
+        sRadio.setSelected(true);
+
+        Button newGameButton = new Button("New Game");
+        newGameButton.setOnAction(e -> {
+            showLandingScreen();
+        });
+
+        panel.getChildren().addAll(label, sRadio, oRadio, newGameButton);
+        return panel;
+    }
+
+    private void handleCellClick(Label cell, int row, int col) {
         Board board = console.getBoard();
         if (board == null || !board.isEmpty(row, col)) return;
 
-        // Get selected S or O from current player's radio buttons
         RadioButton selectedButton = (RadioButton) (
-                currentPlayer.equals("Red") ? redGroup.getSelectedToggle() : blueGroup.getSelectedToggle()
-                );
+                console.getCurrentPlayer().equals("Red") ? redGroup.getSelectedToggle() : blueGroup.getSelectedToggle()
+        );
 
         if (selectedButton == null) {
-            showAlert("Selection Error", "Please select S or O before making a move");
+            showAlert("Selection Error", "Please select S or O before making a move.");
             return;
         }
 
@@ -199,18 +202,29 @@ public class GUI extends Application {
         if (success) {
             cell.setText(String.valueOf(letter));
 
-            // change background color based on player
-            String color = currentPlayer.equals("Red") ? "#cce0ff": "#ffcccc";
+            // Update board background color
+            String color = console.getCurrentPlayer().equals("Red") ? "#ffcccc" : "#cce0ff";
             root.setStyle("-fx-background-color: " + color + ";");
 
-            currentPlayer = console.getCurrentPlayer();
-            currentTurnLabel.setText("Current Turn: " + currentPlayer);
-        } else {
-            showAlert("Invalid input", "Please enter a valid number between 3 and 10.");
+            // Update turn label
+            currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
+
+            // If the game has ended in simple mode
+            if (!console.getGame().isGameInProgress()) {
+                String winner = console.getGame().getWinner();
+                if (winner != null) {
+                    GUI.showWinScreenStatic(winner);
+                }
+            }
+
+            // If general mode, also update score
+            if (console.getGame() instanceof GeneralSOSGame g) {
+                System.out.println("Red: " + g.getRedScore() + " | Blue: " + g.getBlueScore());
+            }
         }
     }
 
-    private static void showAlert(String title, String message) {
+    private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -218,7 +232,7 @@ public class GUI extends Application {
         alert.showAndWait();
     }
 
-    private static GridPane getGridPane(Board board) {
+    private GridPane getGridPane(Board board) {
         GridPane grid = new GridPane();
         grid.setGridLinesVisible(true);
         grid.setHgap(2);
@@ -232,15 +246,62 @@ public class GUI extends Application {
                 cell.setAlignment(Pos.CENTER);
                 cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
 
-                final int r = row;
-                final int c = col;
-
-                cell.setOnMouseClicked(event -> handleCellClick(cell, r, c));
-
+                int r = row;
+                int c = col;
+                cell.setOnMouseClicked(e -> handleCellClick(cell, r, c));
                 grid.add(cell, col, row);
             }
         }
         return grid;
     }
 
+    public static void highlightSOS(SOSGame.SOSSequence seq) {
+        Label cell1 = instance.getCellLabel(seq.row1(), seq.col1());
+        Label cell2 = instance.getCellLabel(seq.row2(), seq.col2());
+        Label cell3 = instance.getCellLabel(seq.row3(), seq.col3());
+
+        String color = seq.player().equals("Red") ? "#ff4c4c" : "#4c6eff";
+        String style = "-fx-border-color: " + color + "; -fx-border-width: 3px; -fx-font-weight: bold;";
+        cell1.setStyle(style);
+        cell2.setStyle(style);
+        cell3.setStyle(style);
+    }
+
+    private Label getCellLabel(int row, int col) {
+        for (var node : grid.getChildren()) {
+            Integer r = GridPane.getRowIndex(node);
+            Integer c = GridPane.getColumnIndex(node);
+            if ((r == null ? 0 : r) == row && (c == null ? 0 : c) == col) {
+                return (Label) node;
+            }
+        }
+        return null;
+    }
+
+    public static void showWinScreenStatic(String winner) {
+        if (instance != null) instance.showWinScreen(winner);
+    }
+
+    private void showWinScreen(String winner) {
+        Label winLabel = new Label(winner + " Wins!");
+        winLabel.setStyle("-fx-font-size: 36px; -fx-font-weight: bold;");
+
+        Button playAgain = new Button("Play Again");
+        playAgain.setOnAction(e -> showLandingScreen());
+
+        VBox layout = new VBox(30, winLabel, playAgain);
+        layout.setAlignment(Pos.CENTER);
+
+        Timeline disco = new Timeline(
+                new KeyFrame(Duration.seconds(0.3), ev -> {
+                    String color = String.format("#%06x", (int)(Math.random() * 0xffffff));
+                    layout.setStyle("-fx-background-color: " + color + ";");
+                })
+        );
+        disco.setCycleCount(Animation.INDEFINITE);
+        disco.play();
+
+        Scene winScene = new Scene(layout, 800, 600);
+        primaryStage.setScene(winScene);
+    }
 }
