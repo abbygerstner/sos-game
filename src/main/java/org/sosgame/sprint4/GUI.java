@@ -28,10 +28,13 @@ public class GUI extends Application {
     private Console.GameMode gameMode = Console.GameMode.SIMPLE;
     private Stage primaryStage;
     public static GUI instance;
-    private String opponentType;
-    private int boardSize = 8; // default
+    private int boardSize = 8;
     private String redPlayerType = "Human";
     private String bluePlayerType = "Human";
+    private RadioButton blueHumanRadio;
+    private RadioButton blueComputerRadio;
+    private RadioButton redHumanRadio;
+    private RadioButton redComputerRadio;
 
     @Override
     public void start(Stage primaryStage) {
@@ -43,56 +46,75 @@ public class GUI extends Application {
 
     private void showLandingScreen() {
         Label title = new Label("Welcome to SOS!");
-        title.setStyle("-fx-font-size: 30px; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold;");
 
-        // Game mode selection
-        RadioButton simpleRadio = new RadioButton("Simple Game");
-        RadioButton generalRadio = new RadioButton("General Game");
+        Label modeLabel = new Label("Game Mode");
+        modeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        RadioButton simpleRadio = new RadioButton("Simple");
+        RadioButton generalRadio = new RadioButton("General");
         ToggleGroup gameModeGroup = new ToggleGroup();
         simpleRadio.setToggleGroup(gameModeGroup);
         generalRadio.setToggleGroup(gameModeGroup);
         simpleRadio.setSelected(true);
 
-        gameModeGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
-            if (selected == generalRadio) {
-                gameMode = Console.GameMode.GENERAL;
-            } else {
-                gameMode = Console.GameMode.SIMPLE;
-            }
-        });
+        VBox gameModeBox = new VBox(10, modeLabel, simpleRadio, generalRadio);
+        gameModeBox.setStyle(cardStyle());
+        gameModeBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Red player type selection
-        Label redLabel = new Label("Red Player");
-        RadioButton humanRadio = new RadioButton("Human");
-        RadioButton computerRadio = new RadioButton("Computer");
-        ToggleGroup opponentGroup = new ToggleGroup();
-        humanRadio.setToggleGroup(opponentGroup);
-        computerRadio.setToggleGroup(opponentGroup);
-        humanRadio.setSelected(true);
+        Label playersLabel = new Label("Player Settings");
+        playersLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        // Blue player type selection
-        Label blueLabel = new Label("Blue Player");
-        RadioButton humanRadio2 = new RadioButton("Human");
-        RadioButton computerRadio2 = new RadioButton("Computer");
-        ToggleGroup opponentGroup2 = new ToggleGroup();
-        humanRadio2.setToggleGroup(opponentGroup2);
-        computerRadio2.setToggleGroup(opponentGroup2);
-        humanRadio2.setSelected(true);
+        // Blue
+        RadioButton blueHumanRadio = new RadioButton("Human");
+        RadioButton blueComputerRadio = new RadioButton("Computer");
 
-        opponentGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
-            redPlayerType = (selected == humanRadio) ? "Human" : "Computer";
-        });
+        ToggleGroup blueGroup = new ToggleGroup();
+        blueHumanRadio.setToggleGroup(blueGroup);
+        blueComputerRadio.setToggleGroup(blueGroup);
 
-        opponentGroup2.selectedToggleProperty().addListener((obs, old, selected) -> {
-            bluePlayerType = (selected == humanRadio2) ? "Human" : "Computer";
-        });
+        blueHumanRadio.setSelected(true); // default
 
-        // Board size input
+        VBox blueBox = new VBox(5,
+                new Label("Blue Player"),
+                blueHumanRadio,
+                blueComputerRadio
+        );
+        blueBox.setAlignment(Pos.CENTER_LEFT);
+
+        // Red
+        RadioButton redHumanRadio = new RadioButton("Human");
+        RadioButton redComputerRadio = new RadioButton("Computer");
+
+        ToggleGroup redGroup = new ToggleGroup();
+        redHumanRadio.setToggleGroup(redGroup);
+        redComputerRadio.setToggleGroup(redGroup);
+
+        redHumanRadio.setSelected(true); // default
+
+        VBox redBox = new VBox(5,
+                new Label("Red Player"),
+                redHumanRadio,
+                redComputerRadio
+        );
+        redBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox playersHBox = new HBox(40, blueBox, redBox);
+        playersHBox.setAlignment(Pos.CENTER);
+
+        VBox playersSection = new VBox(10, playersLabel, playersHBox);
+        playersSection.setStyle(cardStyle());
+
         Label sizeLabel = new Label("Board Size (3–10):");
         TextField sizeField = new TextField("8");
-        sizeField.setMaxWidth(50);
+        sizeField.setMaxWidth(60);
+
+        VBox sizeBox = new VBox(5, sizeLabel, sizeField);
+        sizeBox.setStyle(cardStyle());
+        sizeBox.setAlignment(Pos.CENTER_LEFT);
 
         Button startButton = new Button("Start Game");
+        startButton.setStyle("-fx-font-size: 16px; -fx-padding: 8 20;");
         startButton.setOnAction(e -> {
             try {
                 int size = Integer.parseInt(sizeField.getText());
@@ -103,8 +125,9 @@ public class GUI extends Application {
                 }
 
                 this.boardSize = size;
-                boolean redIsComputer = computerRadio.isSelected();
-                boolean blueIsComputer = computerRadio2.isSelected();
+                boolean blueIsComputer = blueComputerRadio.isSelected();
+                boolean redIsComputer = redComputerRadio.isSelected();
+                Console.GameMode gameMode = simpleRadio.isSelected() ? Console.GameMode.SIMPLE : Console.GameMode.GENERAL;
                 console.initiateGame(boardSize, gameMode, redIsComputer, blueIsComputer);
                 showGameScreen();
 
@@ -113,15 +136,22 @@ public class GUI extends Application {
             }
         });
 
-        VBox layout = new VBox(15, title, simpleRadio, generalRadio, redLabel, humanRadio, computerRadio, blueLabel, humanRadio2, computerRadio2, sizeLabel, sizeField, startButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #f7f9f9, #d0e6df);");
+        VBox layout = new VBox(30, title, gameModeBox, playersSection, sizeBox, startButton);
+        layout.setAlignment(Pos.TOP_CENTER);
         layout.setPadding(new Insets(40));
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #f7f9f9, #d0e6df);");
 
         Scene scene = new Scene(layout, 800, 600);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("SOS Game");
         primaryStage.show();
+    }
+
+    private String cardStyle() {
+        return "-fx-background-color: #ffffff;"
+                + "-fx-padding: 15;"
+                + "-fx-border-radius: 10;"
+                + "-fx-background-radius: 10;"
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0.2, 0, 2);";
     }
 
     private void showGameScreen() {
