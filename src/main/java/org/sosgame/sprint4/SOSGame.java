@@ -47,19 +47,33 @@ public abstract class SOSGame {
 
     public boolean makeMove(int row, int col, char letter) {
         // Human move
-        boolean valid = attemptMove(row, col, letter);
-        if (!valid) return false;
+        boolean placed = attemptMove(row, col, letter);
+        if (!placed) return false;
 
-        // If game ended, stop here.
+        // If game ended stop now
         if (!gameInProgress) return true;
 
+        // See if SOS was formed
+        boolean formedSOS = formedSOSLastMove(row, col);
+
+        // For general game: if SOS formed, same player goes again
+        if (formedSOS && (this instanceof GeneralSOSGame)) {
+            // Do not switch turn
+            return true;
+        }
+        // Else switch to the other player
         switchTurn();
 
-        // If new current player is computer, autoplay
+        // If the new current player is computer, autoplay using same rules
         if (currentPlayerObj.isComputer()) {
-            Move m = currentPlayerObj.getMove(this);
-            attemptMove(m.row, m.col, m.letter);
-            System.out.println("Computer played " + m.letter + " at " + m.row + "," + m.col);
+            boolean compFormedSOS;
+            do {
+                Move m = currentPlayerObj.getMove(this);
+                attemptMove(m.row, m.col, m.letter);
+                if (!gameInProgress) break;
+                compFormedSOS = checkWinner(m.row, m.col);
+            } while (compFormedSOS && (this instanceof GeneralSOSGame));
+
             if (gameInProgress)
                 switchTurn();
         }
@@ -85,35 +99,25 @@ public abstract class SOSGame {
     }
 
     protected boolean attemptMove(int row, int col, char letter) {
-
-        // Can't play if the game is already over
         if (!gameInProgress) return false;
 
-        // Check bounds and that cell is empty
         if (!board.isCellEmpty(row, col)) return false;
 
-        // Place the letter
         board.setCell(row, col, letter);
 
         if (listener != null) {
             listener.onMoveMade(row, col, letter, currentPlayerObj.getColor());
         }
 
-        // Check for winner (each mode implements its own check)
-        boolean formedSOS = checkWinner(row, col);
-
-        if (formedSOS && listener != null) {
-            listener.onSOSFormed(getSequencesFromLastMove(row, col));
+        if (!gameInProgress && listener != null) {
+            listener.onGameOver(winner);
         }
 
-        // If winner declared inside checkWinner(), stop the game
-        if (!gameInProgress) {
-            if (listener != null) {
-                listener.onGameOver(winner);
-            }
-        }
+        return true;  // always true if move placed
+    }
 
-        return true;
+    protected boolean formedSOSLastMove(int row, int col) {
+        return checkWinner(row, col);
     }
 
     public String getWinner() { return winner; }

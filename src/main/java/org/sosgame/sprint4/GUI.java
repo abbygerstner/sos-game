@@ -172,15 +172,6 @@ public class GUI extends Application {
         scoreLabel = new Label();
         scoreLabel.setText("Score — Blue: 0 | Red: 0");
 
-        // Radio buttons to switch mode (if desired mid-game)
-//        RadioButton simpleRadio = new RadioButton("Simple Game");
-//        RadioButton generalRadio = new RadioButton("General Game");
-//        ToggleGroup modeGroup = new ToggleGroup();
-//        simpleRadio.setToggleGroup(modeGroup);
-//        generalRadio.setToggleGroup(modeGroup);
-//        simpleRadio.setSelected(gameMode == Console.GameMode.SIMPLE);
-//        generalRadio.setSelected(gameMode == Console.GameMode.GENERAL);
-
         VBox leftPanel = createBluePlayerPanel();
         centerPanel = createCenterPanel(titleLabel, scoreLabel, grid, currentTurnLabel);
         VBox rightPanel = createRedPlayerPanel();
@@ -218,7 +209,13 @@ public class GUI extends Application {
     }
 
     private VBox createCenterPanel(Label title, Label scoreLabel, GridPane grid, Label turn) {
-        VBox panel = new VBox(20, title, grid, turn);
+        VBox panel;
+        if (gameMode == Console.GameMode.GENERAL) {
+            panel = new VBox(20, title, scoreLabel, grid, turn);
+        } else {
+            // Simple game → no scoreboard
+            panel = new VBox(20, title, grid, turn);
+        }
         panel.setAlignment(Pos.CENTER);
         return panel;
     }
@@ -283,7 +280,6 @@ public class GUI extends Application {
 
             // If general mode, also update score
             if (console.getGame() instanceof GeneralSOSGame g) {
-//                System.out.println("Red: " + g.getRedScore() + " | Blue: " + g.getBlueScore());
                 GeneralSOSGame game = console.getGeneralGame();
                 int redScore = game.getRedScore();
                 int blueScore = game.getBlueScore();
