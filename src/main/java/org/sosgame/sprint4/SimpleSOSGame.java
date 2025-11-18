@@ -1,9 +1,12 @@
 package org.sosgame.sprint4;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SimpleSOSGame extends SOSGame {
 
-    public SimpleSOSGame(int size) {
-        super(size);
+    public SimpleSOSGame(int size, boolean vsComputer) {
+        super(size, vsComputer);
     }
 
     @Override
@@ -12,7 +15,7 @@ public class SimpleSOSGame extends SOSGame {
         // If current move creates any "SOS", game ends
         if (seq != null) {
             gameInProgress = false;
-            winner = currentPlayer;
+            winner = currentPlayerObj.getColor();
             if (listener != null) {
                 listener.onGameOver(winner);
             }
@@ -50,7 +53,7 @@ public class SimpleSOSGame extends SOSGame {
                 if (Character.toUpperCase(g[aR1][aC1]) == 'S' &&
                         placed == 'O' &&
                         Character.toUpperCase(g[aR3][aC3]) == 'S') {
-                    return new SOSSequence(aR1, aC1, row, col, aR3, aC3, currentPlayer);
+                    return new SOSSequence(aR1, aC1, row, col, aR3, aC3, currentPlayerObj.getColor());
                 }
             }
 
@@ -61,7 +64,7 @@ public class SimpleSOSGame extends SOSGame {
                 if (placed == 'S' &&
                         Character.toUpperCase(g[bR1][bC1]) == 'O' &&
                         Character.toUpperCase(g[bR2][bC2]) == 'S') {
-                    return new SOSSequence(row, col, bR1, bC1, bR2, bC2, currentPlayer);
+                    return new SOSSequence(row, col, bR1, bC1, bR2, bC2, currentPlayerObj.getColor());
                 }
             }
 
@@ -72,11 +75,19 @@ public class SimpleSOSGame extends SOSGame {
                 if (Character.toUpperCase(g[cR1][cC1]) == 'S' &&
                         Character.toUpperCase(g[cR2][cC2]) == 'O' &&
                         placed == 'S') {
-                    return new SOSSequence(cR1, cC1, cR2, cC2, row, col, currentPlayer);
+                    return new SOSSequence(cR1, cC1, cR2, cC2, row, col, currentPlayerObj.getColor());
                 }
             }
         }
         return null;
     }
 
+    @Override
+    protected List<SOSSequence> getSequencesFromLastMove(int row, int col) {
+        SOSSequence seq = formsSOS(row, col);
+        if (seq == null) return new ArrayList<>();
+        List<SOSSequence> list = new ArrayList<>();
+        list.add(seq);
+        return list;
+    }
 }

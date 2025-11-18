@@ -7,8 +7,8 @@ public class GeneralSOSGame extends SOSGame {
     private int redScore = 0;
     private int blueScore = 0;
 
-    public GeneralSOSGame(int size) {
-        super(size);
+    public GeneralSOSGame(int size, boolean vsComputer) {
+        super(size, vsComputer);
     }
 
     @Override
@@ -17,7 +17,7 @@ public class GeneralSOSGame extends SOSGame {
 
         if (!sequences.isEmpty()) {
             // Update scores
-            if (currentPlayer.equals("Red")) redScore += sequences.size();
+            if (currentPlayerObj.getColor().equals("Red")) redScore += sequences.size();
             else blueScore += sequences.size();
 
             // Notify listener to highlight SOS
@@ -59,7 +59,7 @@ public class GeneralSOSGame extends SOSGame {
                 if (Character.toUpperCase(g[mR1][mC1]) == 'S' &&
                         placed == 'O' &&
                         Character.toUpperCase(g[mR3][mC3]) == 'S') {
-                    list.add(new SOSSequence(mR1, mC1, row, col, mR3, mC3, currentPlayer));
+                    list.add(new SOSSequence(mR1, mC1, row, col, mR3, mC3, currentPlayerObj.getColor()));
                 }
             }
 
@@ -70,7 +70,7 @@ public class GeneralSOSGame extends SOSGame {
                 if (placed == 'S' &&
                         Character.toUpperCase(g[fR1][fC1]) == 'O' &&
                         Character.toUpperCase(g[fR2][fC2]) == 'S') {
-                    list.add(new SOSSequence(row, col, fR1, fC1, fR2, fC2, currentPlayer));
+                    list.add(new SOSSequence(row, col, fR1, fC1, fR2, fC2, currentPlayerObj.getColor()));
                 }
             }
 
@@ -81,7 +81,7 @@ public class GeneralSOSGame extends SOSGame {
                 if (Character.toUpperCase(g[lR1][lC1]) == 'S' &&
                         Character.toUpperCase(g[lR2][lC2]) == 'O' &&
                         placed == 'S') {
-                    list.add(new SOSSequence(lR1, lC1, lR2, lC2, row, col, currentPlayer));
+                    list.add(new SOSSequence(lR1, lC1, lR2, lC2, row, col, currentPlayerObj.getColor()));
                 }
             }
         }
@@ -97,4 +97,50 @@ public class GeneralSOSGame extends SOSGame {
 
     public int getRedScore() { return redScore; }
     public int getBlueScore() { return blueScore; }
+
+    @Override
+    protected List<SOSSequence> getSequencesFromLastMove(int row, int col) {
+        return countSOS(row, col);
+    }
+
+    private boolean createsSOS(int row, int col, char letter) {
+        char[][] grid = board.getGrid();
+
+        // temporarily make move
+        char old = grid[row][col];
+        grid[row][col] = letter;
+
+        // check sequences
+        boolean found = !countSOS(row, col).isEmpty();
+
+        // undo
+        grid[row][col] = old;
+        return found;
+    }
+
+    @Override
+    public Move getComputerMove() {
+        char[][] g = board.getGrid();
+        int n = board.getSize();
+
+        // Try all empty cells with both 'S' and 'O'
+        for (int r = 0; r < n; r++) {
+            for (int c = 0; c < n; c++) {
+                if (g[r][c] == '\0' || g[r][c] == ' ') {
+
+                    // Try placing S
+                    if (createsSOS(r, c, 'S'))
+                        return new Move(r, c, 'S');
+
+                    // Try placing O
+                    if (createsSOS(r, c, 'O'))
+                        return new Move(r, c, 'O');
+                }
+            }
+        }
+
+        // Otherwise fallback
+        return getFirstAvailableMove();
+    }
+
 }

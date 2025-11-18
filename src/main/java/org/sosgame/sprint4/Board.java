@@ -57,4 +57,13 @@ public class Board {
         }
         return true;
     }
+
+    public boolean isCellEmpty(int r, int c) {
+        return grid[r][c] == '\0' || grid[r][c] == ' ';
+    }
+
+    public void setCell(int r, int c, char letter) {
+        grid[r][c] = letter;
+    }
+
 }
