@@ -2,22 +2,24 @@ package org.sosgame.sprint4;
 
 public class Console {
     private SOSGame sosGame;
-    private boolean vsComputer = false;   // NEW: store opponent type
+    private boolean blueIsComputer = false;
+    private boolean redIsComputer = false;
 
     public enum GameMode {
         SIMPLE,
         GENERAL
     }
 
-    public void setVsComputer(boolean vsComputer) {
-        this.vsComputer = vsComputer;
+    public void setBlueIsComputer(boolean value) {
+        this.blueIsComputer = value;
     }
 
-    public boolean isVsComputer() {
-        return vsComputer;
+    public void setRedIsComputer(boolean value) {
+        this.redIsComputer = value;
     }
 
-    public void initiateGame(int size, GameMode gameMode) {
+    public void initiateGame(int size, GameMode gameMode,
+                             boolean redIsComputer, boolean blueIsComputer) {
         if (gameMode == null) gameMode = GameMode.SIMPLE;
 
         if (size < 3 || size > 10)
@@ -25,14 +27,15 @@ public class Console {
 
         switch (gameMode) {
             case SIMPLE:
-                sosGame = new SimpleSOSGame(size, vsComputer);
+                sosGame = new SimpleSOSGame(size, blueIsComputer, redIsComputer);
                 break;
 
             case GENERAL:
-                sosGame = new GeneralSOSGame(size, vsComputer);
+                sosGame = new GeneralSOSGame(size, blueIsComputer, redIsComputer);
                 break;
         }
     }
+
 
     public void setGame(SOSGame game) {
         this.sosGame = game;
@@ -79,7 +82,10 @@ public class Console {
     public static record ComputerMove(int row, int col, char letter) {}
 
     public ComputerMove makeComputerMove() {
-        if (sosGame == null || !vsComputer) return null;
+        if (sosGame == null) return null;
+
+        // Only trigger if the current player is a computer
+        if (!sosGame.currentPlayerIsComputer()) return null;
 
         // Ask the SOSGame for its computer-selected move
         SOSGame.Move move = sosGame.getComputerMove();

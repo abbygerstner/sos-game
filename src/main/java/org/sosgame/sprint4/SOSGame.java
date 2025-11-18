@@ -13,20 +13,13 @@ public abstract class SOSGame {
     protected boolean vsComputer;
     protected abstract List<SOSSequence> getSequencesFromLastMove(int row, int col);
 
-    public SOSGame(int size, boolean vsComputer) {
+    public SOSGame(int size, boolean isBlueCPU, boolean isRedCPU) {
         this.board = new Board(size);
-        this.vsComputer = vsComputer;
-
-        // Blue is always human and goes first
-        bluePlayer = new HumanPlayer("Blue");
-
-        // Red is either human or computer
-        redPlayer = vsComputer ? new ComputerPlayer("Red")
-                : new HumanPlayer("Red");
+        bluePlayer = isBlueCPU ? new ComputerPlayer("Blue") : new HumanPlayer("Blue");
+        redPlayer  = isRedCPU ? new ComputerPlayer("Red") : new HumanPlayer("Red");
         currentPlayerObj = bluePlayer;
         this.gameInProgress = true;
     }
-
 
     public Board getBoard() {
         return board;
@@ -43,7 +36,6 @@ public abstract class SOSGame {
             currentPlayerObj = redPlayer;
         }
     }
-
 
     public boolean makeMove(int row, int col, char letter) {
         // Human move
@@ -65,18 +57,18 @@ public abstract class SOSGame {
         switchTurn();
 
         // If the new current player is computer, autoplay using same rules
-        if (currentPlayerObj.isComputer()) {
-            boolean compFormedSOS;
-            do {
-                Move m = currentPlayerObj.getMove(this);
-                attemptMove(m.row, m.col, m.letter);
-                if (!gameInProgress) break;
-                compFormedSOS = checkWinner(m.row, m.col);
-            } while (compFormedSOS && (this instanceof GeneralSOSGame));
-
-            if (gameInProgress)
-                switchTurn();
-        }
+//        if (currentPlayerObj.isComputer()) {
+//            boolean compFormedSOS;
+//            do {
+//                Move m = currentPlayerObj.getMove(this);
+//                attemptMove(m.row, m.col, m.letter);
+//                if (!gameInProgress) break;
+//                compFormedSOS = checkWinner(m.row, m.col);
+//            } while (compFormedSOS && (this instanceof GeneralSOSGame));
+//
+//            if (gameInProgress)
+//                switchTurn();
+//        }
         return true;
     }
 
@@ -130,7 +122,7 @@ public abstract class SOSGame {
         return gameInProgress;
     }
 
-    /** Each game mode defines its own winner logic */
+    // Each game mode defines its own winner logic
     protected abstract boolean checkWinner(int row, int col);
 
     public record SOSSequence(int row1, int col1, int row2, int col2, int row3, int col3, String player) {}
@@ -144,6 +136,10 @@ public abstract class SOSGame {
     // default (simple) logic
     public Move getComputerMove() {
         return getFirstAvailableMove();
+    }
+
+    public boolean currentPlayerIsComputer() {
+        return currentPlayerObj instanceof ComputerPlayer;
     }
 
 }

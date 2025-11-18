@@ -7,8 +7,8 @@ public class GeneralSOSGame extends SOSGame {
     private int redScore = 0;
     private int blueScore = 0;
 
-    public GeneralSOSGame(int size, boolean vsComputer) {
-        super(size, vsComputer);
+    public GeneralSOSGame(int size, boolean blueIsCPU, boolean redIsCPU) {
+        super(size, blueIsCPU, redIsCPU);
     }
 
     @Override

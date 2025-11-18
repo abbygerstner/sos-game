@@ -5,8 +5,8 @@ import java.util.List;
 
 public class SimpleSOSGame extends SOSGame {
 
-    public SimpleSOSGame(int size, boolean vsComputer) {
-        super(size, vsComputer);
+    public SimpleSOSGame(int size, boolean blueIsCPU, boolean redIsCPU) {
+        super(size, blueIsCPU, redIsCPU);
     }
 
     @Override

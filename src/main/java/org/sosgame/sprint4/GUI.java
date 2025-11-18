@@ -30,6 +30,8 @@ public class GUI extends Application {
     public static GUI instance;
     private String opponentType;
     private int boardSize = 8; // default
+    private String redPlayerType = "Human";
+    private String bluePlayerType = "Human";
 
     @Override
     public void start(Stage primaryStage) {
@@ -51,20 +53,38 @@ public class GUI extends Application {
         generalRadio.setToggleGroup(gameModeGroup);
         simpleRadio.setSelected(true);
 
-        // Opponent selection
-        RadioButton humanRadio = new RadioButton("Human Opponent");
-        RadioButton computerRadio = new RadioButton("Computer Opponent");
+        gameModeGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
+            if (selected == generalRadio) {
+                gameMode = Console.GameMode.GENERAL;
+            } else {
+                gameMode = Console.GameMode.SIMPLE;
+            }
+        });
+
+        // Red player type selection
+        Label redLabel = new Label("Red Player");
+        RadioButton humanRadio = new RadioButton("Human");
+        RadioButton computerRadio = new RadioButton("Computer");
         ToggleGroup opponentGroup = new ToggleGroup();
         humanRadio.setToggleGroup(opponentGroup);
         computerRadio.setToggleGroup(opponentGroup);
         humanRadio.setSelected(true);
 
-        gameModeGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
-            gameMode = (selected == generalRadio) ? Console.GameMode.GENERAL : Console.GameMode.SIMPLE;
-        });
+        // Blue player type selection
+        Label blueLabel = new Label("Blue Player");
+        RadioButton humanRadio2 = new RadioButton("Human");
+        RadioButton computerRadio2 = new RadioButton("Computer");
+        ToggleGroup opponentGroup2 = new ToggleGroup();
+        humanRadio2.setToggleGroup(opponentGroup2);
+        computerRadio2.setToggleGroup(opponentGroup2);
+        humanRadio2.setSelected(true);
 
         opponentGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
-            opponentType = (selected == humanRadio) ? "Human" : "Computer";
+            redPlayerType = (selected == humanRadio) ? "Human" : "Computer";
+        });
+
+        opponentGroup2.selectedToggleProperty().addListener((obs, old, selected) -> {
+            bluePlayerType = (selected == humanRadio2) ? "Human" : "Computer";
         });
 
         // Board size input
@@ -72,7 +92,6 @@ public class GUI extends Application {
         TextField sizeField = new TextField("8");
         sizeField.setMaxWidth(50);
 
-        // Start button
         Button startButton = new Button("Start Game");
         startButton.setOnAction(e -> {
             try {
@@ -84,8 +103,9 @@ public class GUI extends Application {
                 }
 
                 this.boardSize = size;
-                console.setVsComputer(computerRadio.isSelected());
-                console.initiateGame(boardSize, gameMode);
+                boolean redIsComputer = computerRadio.isSelected();
+                boolean blueIsComputer = computerRadio2.isSelected();
+                console.initiateGame(boardSize, gameMode, redIsComputer, blueIsComputer);
                 showGameScreen();
 
             } catch (NumberFormatException ex) {
@@ -93,7 +113,7 @@ public class GUI extends Application {
             }
         });
 
-        VBox layout = new VBox(15, title, simpleRadio, generalRadio, humanRadio, computerRadio, sizeLabel, sizeField, startButton);
+        VBox layout = new VBox(15, title, simpleRadio, generalRadio, redLabel, humanRadio, computerRadio, blueLabel, humanRadio2, computerRadio2, sizeLabel, sizeField, startButton);
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: linear-gradient(to bottom, #f7f9f9, #d0e6df);");
         layout.setPadding(new Insets(40));
@@ -105,14 +125,6 @@ public class GUI extends Application {
     }
 
     private void showGameScreen() {
-//        if (console.getGame() == null) {
-//            if (gameMode == Console.GameMode.SIMPLE) {
-//                console.setGame(new SimpleSOSGame(boardSize));
-//            } else {
-//                console.setGame(new GeneralSOSGame(boardSize));
-//            }
-//        }
-
         SOSGame game = console.getGame();
         game.setListener(new GameEventListener() {
             @Override
@@ -187,6 +199,10 @@ public class GUI extends Application {
         Scene gameScene = new Scene(root);
         primaryStage.setScene(gameScene);
         primaryStage.show();
+
+        if (game.currentPlayerIsComputer()) {
+            runComputerTurnWithDelay();
+        }
     }
 
     private VBox createBluePlayerPanel() {
@@ -213,7 +229,6 @@ public class GUI extends Application {
         if (gameMode == Console.GameMode.GENERAL) {
             panel = new VBox(20, title, scoreLabel, grid, turn);
         } else {
-            // Simple game → no scoreboard
             panel = new VBox(20, title, grid, turn);
         }
         panel.setAlignment(Pos.CENTER);
@@ -263,14 +278,8 @@ public class GUI extends Application {
         if (success) {
             cell.setText(String.valueOf(letter));
 
-            // Update board background color
-            String color = console.getCurrentPlayer().equals("Red") ? "#ffcccc" : "#cce0ff";
-            root.setStyle("-fx-background-color: " + color + ";");
-
-            // Update turn label
             currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
 
-            // If the game has ended in simple mode
             if (!console.getGame().isGameInProgress()) {
                 String winner = console.getGame().getWinner();
                 if (winner != null) {
@@ -278,12 +287,17 @@ public class GUI extends Application {
                 }
             }
 
-            // If general mode, also update score
             if (console.getGame() instanceof GeneralSOSGame g) {
                 GeneralSOSGame game = console.getGeneralGame();
                 int redScore = game.getRedScore();
                 int blueScore = game.getBlueScore();
                 scoreLabel.setText("Score — Blue: " + blueScore + " | Red: " + redScore);
+            }
+
+            if (console.getGame().currentPlayerIsComputer() &&
+                    console.getGame().isGameInProgress()) {
+
+                runComputerTurnWithDelay();
             }
         }
     }
@@ -385,6 +399,28 @@ public class GUI extends Application {
 
         Scene tieScene = new Scene(layout, 800, 600);
         primaryStage.setScene(tieScene);
+    }
+
+    private void runComputerTurnWithDelay() {
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.5), event -> {
+                    Console.ComputerMove cm = console.makeComputerMove();
+                    if (cm == null) return;
+
+                    Label cell = getCellLabel(cm.row(), cm.col());
+                    if (cell != null) cell.setText(String.valueOf(cm.letter()));
+
+                    currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
+
+                    // Continue autoplay if next player is also a computer
+                    if (console.getGame().currentPlayerIsComputer() &&
+                            console.getGame().isGameInProgress()) {
+
+                        runComputerTurnWithDelay();
+                    }
+                })
+        );
+        timeline.play();
     }
 
 }
