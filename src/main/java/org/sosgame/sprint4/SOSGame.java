@@ -56,19 +56,6 @@ public abstract class SOSGame {
         // Else switch to the other player
         switchTurn();
 
-        // If the new current player is computer, autoplay using same rules
-//        if (currentPlayerObj.isComputer()) {
-//            boolean compFormedSOS;
-//            do {
-//                Move m = currentPlayerObj.getMove(this);
-//                attemptMove(m.row, m.col, m.letter);
-//                if (!gameInProgress) break;
-//                compFormedSOS = checkWinner(m.row, m.col);
-//            } while (compFormedSOS && (this instanceof GeneralSOSGame));
-//
-//            if (gameInProgress)
-//                switchTurn();
-//        }
         return true;
     }
 
@@ -113,7 +100,7 @@ public abstract class SOSGame {
     }
 
     public String getWinner() { return winner; }
-    
+
     public void setListener(GameEventListener listener) {
         this.listener = listener;
     }
