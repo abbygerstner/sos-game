@@ -40,10 +40,6 @@ public class Board {
         return grid[row][col] == '\0';
     }
 
-    public void placeLetter(int row, int col, char letter) {
-        if (!isEmpty(row, col)) return;
-        grid[row][col] = Character.toUpperCase(letter);
-    }
 
     public char[][] getGrid() {
         return grid;
@@ -56,10 +52,6 @@ public class Board {
             }
         }
         return true;
-    }
-
-    public boolean isCellEmpty(int r, int c) {
-        return grid[r][c] == '\0' || grid[r][c] == ' ';
     }
 
     public void setCell(int r, int c, char letter) {

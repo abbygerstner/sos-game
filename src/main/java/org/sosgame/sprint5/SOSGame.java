@@ -80,7 +80,7 @@ public abstract class SOSGame {
     protected boolean attemptMove(int row, int col, char letter) {
         if (!gameInProgress) return false;
 
-        if (!board.isCellEmpty(row, col)) return false;
+        if (!board.isEmpty(row, col)) return false;
 
         board.setCell(row, col, letter);
 
