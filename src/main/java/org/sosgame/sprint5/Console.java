@@ -1,9 +1,15 @@
 package org.sosgame.sprint5;
 
+import java.io.File;
+
 public class Console {
     private SOSGame sosGame;
     private boolean blueIsComputer = false;
     private boolean redIsComputer = false;
+    private GameRecorder recorder;
+    private boolean isReplaying = false;
+    private boolean replaying = false;
+    private static final ThreadLocal<Boolean> isReplayCall = ThreadLocal.withInitial(() -> false);
 
     public enum GameMode {
         SIMPLE,
@@ -34,8 +40,8 @@ public class Console {
                 sosGame = new GeneralSOSGame(size, blueIsComputer, redIsComputer);
                 break;
         }
+        enableRecording(size, gameMode);
     }
-
 
     public void setGame(SOSGame game) {
         this.sosGame = game;
@@ -53,9 +59,34 @@ public class Console {
         return sosGame != null ? sosGame.getCurrentPlayer() : "Red";
     }
 
-    public boolean handleCellClick(int row, int col, char letter) {
+    public boolean handleCellClick(int row, int col, char letter) throws Exception {
         if (sosGame == null) return false;
-        return sosGame.makeMove(row, col, letter);
+        if (isReplaying) return false;
+
+        if (isReplaying() && !isReplayCall.get()) {
+            return false;
+        }
+
+        String player = sosGame.getCurrentPlayer();
+        boolean success = sosGame.makeMove(row, col, letter);
+
+        if (success && recorder != null) {
+            recorder.recordMove(player, row, col, letter);
+        }
+
+//      Auto-save when game ends
+        if (success && !sosGame.isGameInProgress() && recorder != null) {
+            try {
+//                File file = new File("sos_replay.txt");
+//                recorder.saveToFile(file);
+//                System.out.println("Replay saved to: " + file.getAbsolutePath());
+                saveRecordingAuto();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return success;
     }
 
     public boolean isGameInProgress() {
@@ -84,18 +115,65 @@ public class Console {
     public ComputerMove makeComputerMove() {
         if (sosGame == null) return null;
 
-        // Only trigger if the current player is a computer
         if (!sosGame.currentPlayerIsComputer()) return null;
 
-        // Ask the SOSGame for its computer-selected move
         SOSGame.Move move = sosGame.getComputerMove();
         if (move == null) return null;
 
-        // Perform the move inside the game board
         boolean success = sosGame.makeMove(move.row(), move.col(), move.letter());
         if (!success) return null;
 
-        // Return a Console-level version for the GUI
+        if (recorder != null) {
+            String player = sosGame.getCurrentPlayer();
+            recorder.recordMove(player, move.row(), move.col(), move.letter());
+        }
+
         return new ComputerMove(move.row(), move.col(), move.letter());
+    }
+
+    public void enableRecording(int size, GameMode mode) {
+        recorder = new GameRecorder();
+        recorder.recordHeader(size, mode);
+    }
+
+    public void saveRecording(File file) throws Exception {
+        if (recorder == null) return;
+        recorder.saveToFile(file);
+    }
+
+    public void setReplaying(boolean value) {
+        replaying = value;
+    }
+
+    public boolean isReplaying() {
+        return replaying;
+    }
+
+    public void markReplayCall(Runnable action) {
+        isReplayCall.set(true);
+        action.run();
+        isReplayCall.set(false);
+    }
+
+    public void saveRecordingAuto() throws Exception {
+        if (recorder == null) return;
+
+        File dir = new File("recordings");
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        int count = 1;
+        File file;
+
+        do {
+            file = new File(dir, "sos_game_" + count + ".txt");
+            count++;
+        } while (file.exists());
+
+        recorder.saveToFile(file);
+
+        System.out.println("Saved replay file to: " + file.getAbsolutePath());
     }
 }

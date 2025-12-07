@@ -11,9 +11,12 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.sosgame.sprint5.GameReplayer;
 
+import java.io.File;
 import java.util.List;
 
 public class GUI extends Application {
@@ -54,7 +57,8 @@ public class GUI extends Application {
                 createGameModePanel(),
                 createPlayersSection(),
                 createBoardSizePanel(),
-                createStartButton()
+                createStartButton(),
+                createReplayButton()
         );
         layout.setAlignment(Pos.TOP_CENTER);
         layout.setPadding(new Insets(40));
@@ -160,6 +164,12 @@ public class GUI extends Application {
         return startButton;
     }
 
+    private Button createReplayButton() {
+        Button replayButton = new Button("Replay Saved Game");
+//        replayButton.setOnAction(e -> loadReplay());
+        return replayButton;
+    }
+
     private void handleStartClick() {
         try {
             int size = Integer.parseInt(boardSizeField.getText());
@@ -185,6 +195,7 @@ public class GUI extends Application {
 
     private void startNewGame(int size, Console.GameMode mode, boolean redIsComputer, boolean blueIsComputer) {
         this.gameMode = mode;
+//        console.enableRecording(size, mode);
         console.initiateGame(size, mode, redIsComputer, blueIsComputer);
         showGameScreen();
     }
@@ -258,6 +269,9 @@ public class GUI extends Application {
 
         Button newGameButton = new Button("New Game");
         newGameButton.setOnAction(e -> showLandingScreen());
+
+        Button saveButton = new Button("Save Game");
+//        saveButton.setOnAction(e -> saveGameToFile());
 
         root = new HBox(30, leftPanel, centerPanel, rightPanel);
         root.setAlignment(Pos.CENTER);
@@ -516,5 +530,36 @@ public class GUI extends Application {
         );
         timeline.play();
     }
+
+//    private void saveGameToFile() {
+//        FileChooser chooser = new FileChooser();
+//        chooser.setTitle("Save Game");
+//        chooser.setInitialFileName("sos-game.txt");
+//
+//        File file = chooser.showSaveDialog(primaryStage);
+//        if (file == null) return;
+//
+//        try {
+//            console.saveRecording(file);
+//            showAlert("Saved", "Game saved successfully!");
+//        } catch (Exception ex) {
+//            showAlert("Error", "Could not save file.");
+//        }
+//    }
+//
+//    private void loadReplay() {
+//        FileChooser chooser = new FileChooser();
+//        chooser.setTitle("Open Saved Game");
+//
+//        File file = chooser.showOpenDialog(primaryStage);
+//        if (file == null) return;
+//
+//        try {
+//            GameReplayer replayer = new GameReplayer(this, console);
+//            replayer.replayFromFile(file);
+//        } catch (Exception ex) {
+//            showAlert("Error", "Could not replay file");
+//        }
+//    }
 
 }
