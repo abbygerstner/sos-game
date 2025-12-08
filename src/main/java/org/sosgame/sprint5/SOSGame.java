@@ -10,7 +10,6 @@ public abstract class SOSGame {
     protected Player redPlayer;
     protected Player bluePlayer;
     protected Player currentPlayerObj;
-    protected boolean vsComputer;
     protected abstract List<SOSSequence> getSequencesFromLastMove(int row, int col);
 
     public SOSGame(int size, boolean isBlueCPU, boolean isRedCPU) {
@@ -41,16 +40,11 @@ public abstract class SOSGame {
         // Human move
         boolean placed = attemptMove(row, col, letter);
         if (!placed) return false;
-
-        // If game ended stop now
         if (!gameInProgress) return true;
-
-        // See if SOS was formed
         boolean formedSOS = formedSOSLastMove(row, col);
 
         // For general game: if SOS formed, same player goes again
         if (formedSOS && (this instanceof GeneralSOSGame)) {
-            // Do not switch turn
             return true;
         }
         // Else switch to the other player

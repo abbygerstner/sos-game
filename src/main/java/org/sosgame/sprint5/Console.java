@@ -7,9 +7,9 @@ public class Console {
     private boolean blueIsComputer = false;
     private boolean redIsComputer = false;
     private GameRecorder recorder;
-    private boolean isReplaying = false;
     private boolean replaying = false;
-    private static final ThreadLocal<Boolean> isReplayCall = ThreadLocal.withInitial(() -> false);
+    private static final int MIN_BOARD_SIZE = 3;
+    private static final int MAX_BOARD_SIZE = 10;
 
     public enum GameMode {
         SIMPLE,
@@ -25,21 +25,13 @@ public class Console {
     }
 
     public void initiateGame(int size, GameMode gameMode,
-                             boolean redIsComputer, boolean blueIsComputer) {
+                             boolean blueIsComputer, boolean redIsComputer) {
         if (gameMode == null) gameMode = GameMode.SIMPLE;
 
-        if (size < 3 || size > 10)
+        if (size < MIN_BOARD_SIZE || size > MAX_BOARD_SIZE)
             throw new IllegalArgumentException("Board size must be between 3 and 10");
 
-        switch (gameMode) {
-            case SIMPLE:
-                sosGame = new SimpleSOSGame(size, blueIsComputer, redIsComputer);
-                break;
-
-            case GENERAL:
-                sosGame = new GeneralSOSGame(size, blueIsComputer, redIsComputer);
-                break;
-        }
+        sosGame = GameFactory.createGame(gameMode, size, blueIsComputer, redIsComputer);
         enableRecording(size, gameMode);
     }
 
@@ -60,12 +52,15 @@ public class Console {
     }
 
     public boolean handleCellClick(int row, int col, char letter) throws Exception {
-        if (sosGame == null) return false;
-        if (isReplaying) return false;
-
-        if (isReplaying() && !isReplayCall.get()) {
-            return false;
+        if (sosGame == null) {
+            throw new IllegalStateException("Game not initialized");
         }
+
+        if (letter != 'S' && letter != 'O') {
+            throw new IllegalArgumentException("Invalid letter: " + letter);
+        }
+
+        if (replaying) return false;
 
         String player = sosGame.getCurrentPlayer();
         boolean success = sosGame.makeMove(row, col, letter);
@@ -74,12 +69,8 @@ public class Console {
             recorder.recordMove(player, row, col, letter);
         }
 
-//      Auto-save when game ends
         if (success && !sosGame.isGameInProgress() && recorder != null) {
             try {
-//                File file = new File("sos_replay.txt");
-//                recorder.saveToFile(file);
-//                System.out.println("Replay saved to: " + file.getAbsolutePath());
                 saveRecordingAuto();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -109,7 +100,6 @@ public class Console {
         return (sosGame instanceof SimpleSOSGame) ? (SimpleSOSGame) sosGame : null;
     }
 
-    // Requests the next computer move from the game and returns it
     public static record ComputerMove(int row, int col, char letter) {}
 
     public ComputerMove makeComputerMove() {
@@ -149,12 +139,6 @@ public class Console {
         return replaying;
     }
 
-    public void markReplayCall(Runnable action) {
-        isReplayCall.set(true);
-        action.run();
-        isReplayCall.set(false);
-    }
-
     public void saveRecordingAuto() throws Exception {
         if (recorder == null) return;
 
@@ -175,5 +159,12 @@ public class Console {
         recorder.saveToFile(file);
 
         System.out.println("Saved replay file to: " + file.getAbsolutePath());
+    }
+
+    public void applyReplayMove(int row, int col, char letter) throws Exception {
+        if (sosGame == null) return;
+
+        String player = sosGame.getCurrentPlayer();
+        boolean success = sosGame.makeMove(row, col, letter);
     }
 }

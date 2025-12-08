@@ -40,12 +40,22 @@ public class GUI extends Application {
     private RadioButton simpleRadio;
     private RadioButton generalRadio;
     private TextField boardSizeField;
+    private static final int WINDOW_WIDTH = 800;
+    private static final int WINDOW_HEIGHT = 650;
+    private static final int CELL_SIZE = 50;
+    private static final double COMPUTER_MOVE_DELAY_SECONDS = 0.5;
+    private FileController fileController;
+    private ReplayController replayController;
+    private GameController gameController;
 
     @Override
     public void start(Stage primaryStage) {
         instance = this;
         this.primaryStage = primaryStage;
         console = new Console();
+        fileController = new FileController(console, primaryStage);
+        replayController = new ReplayController(this, console, primaryStage);
+        gameController = new GameController(console, this);
         showLandingScreen();
     }
 
@@ -64,7 +74,7 @@ public class GUI extends Application {
         layout.setPadding(new Insets(40));
         layout.setStyle(backgroundStyle());
 
-        Scene scene = new Scene(layout, 800, 650);
+        Scene scene = new Scene(layout, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -279,12 +289,12 @@ public class GUI extends Application {
         root.setPadding(new Insets(20));
         root.setStyle("-fx-background-color: #f0f0f0;");
 
-        Scene gameScene = new Scene(root, 800, 650);
+        Scene gameScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setScene(gameScene);
         primaryStage.show();
 
         if (game.currentPlayerIsComputer()) {
-            runComputerTurnWithDelay();
+            gameController.runComputerTurnIfNeeded();
         }
     }
 
@@ -309,8 +319,6 @@ public class GUI extends Application {
     }
 
     private GridPane buildGameGrid(Board board) {
-        // reuse existing helper getGridPane(board) if it sets up cell labels & click handlers
-        // otherwise ensure this method wires up click handlers to call console.makeMove(row,col,letter)
         return getGridPane(board);
     }
 
@@ -368,11 +376,8 @@ public class GUI extends Application {
         return panel;
     }
 
-    private void handleCellClick(Label cell, int row, int col) throws Exception {
+    private void handleCellClick(Label cell, int row, int col) {
         if (console.isReplaying()) return;
-
-        Board board = console.getBoard();
-        if (board == null || !board.isEmpty(row, col)) return;
 
         RadioButton selectedButton = (RadioButton) (
                 console.getCurrentPlayer().equals("Blue")
@@ -386,34 +391,14 @@ public class GUI extends Application {
         }
 
         char letter = selectedButton.getText().charAt(0);
-        boolean success = console.handleCellClick(row, col, letter);
 
-        if (success) {
-            cell.setText(String.valueOf(letter));
-
-            currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
-
-            if (!console.getGame().isGameInProgress()) {
-                String winner = console.getGame().getWinner();
-                if (winner != null) {
-                    GUI.showWinScreenStatic(winner);
-                }
-            }
-
-            if (console.getGame() instanceof GeneralSOSGame) {
-                GeneralSOSGame game = console.getGeneralGame();
-                int redScore = game.getRedScore();
-                int blueScore = game.getBlueScore();
-                scoreLabel.setText("Score — Blue: " + blueScore + " | Red: " + redScore);
-            }
-
-            if (console.getGame().currentPlayerIsComputer() &&
-                    console.getGame().isGameInProgress()) {
-
-                runComputerTurnWithDelay();
-            }
+        try {
+            gameController.handleHumanMove(row, col, letter);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
+
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -433,7 +418,7 @@ public class GUI extends Application {
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 Label cell = new Label(" ");
-                cell.setMinSize(50, 50);
+                cell.setMinSize(CELL_SIZE, CELL_SIZE);
                 cell.setAlignment(Pos.CENTER);
                 cell.setStyle("-fx-border-color: black; -fx-background-color: white;");
 
@@ -498,7 +483,7 @@ public class GUI extends Application {
         disco.setCycleCount(Animation.INDEFINITE);
         disco.play();
 
-        Scene winScene = new Scene(layout, 800, 650);
+        Scene winScene = new Scene(layout, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setScene(winScene);
     }
 
@@ -516,42 +501,20 @@ public class GUI extends Application {
         VBox layout = new VBox(30, tieLabel, playAgain);
         layout.setAlignment(Pos.CENTER);
 
-        Scene tieScene = new Scene(layout, 800, 650);
+        Scene tieScene = new Scene(layout, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setScene(tieScene);
     }
 
-    private void runComputerTurnWithDelay() {
-        Timeline timeline = new Timeline(
-                new KeyFrame(Duration.seconds(0.5), event -> {
-                    Console.ComputerMove cm = console.makeComputerMove();
-                    if (cm == null) return;
-
-                    Label cell = getCellLabel(cm.row(), cm.col());
-                    if (cell != null) cell.setText(String.valueOf(cm.letter()));
-
-                    currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
-
-                    // Continue autoplay if next player is also a computer
-                    if (console.getGame().currentPlayerIsComputer() &&
-                            console.getGame().isGameInProgress()) {
-
-                        runComputerTurnWithDelay();
-                    }
-                })
+    public void runComputerTurnWithDelay(Runnable action) {
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(0.5), e -> action.run())
         );
         timeline.play();
     }
 
     private void saveGameToFile() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Save Game");
-        chooser.setInitialFileName("sos-game.txt");
-
-        File file = chooser.showSaveDialog(primaryStage);
-        if (file == null) return;
-
         try {
-            console.saveRecording(file);
+            fileController.saveGame();
             showAlert("Saved", "Game saved successfully!");
         } catch (Exception ex) {
             showAlert("Error", "Could not save file.");
@@ -559,17 +522,26 @@ public class GUI extends Application {
     }
 
     private void loadReplay() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Open Saved Game");
+        replayController.startReplay();
+    }
 
-        File file = chooser.showOpenDialog(primaryStage);
-        if (file == null) return;
+    public void updateMoveUI(int row, int col, char letter) {
+        Label cell = getCellLabel(row, col);
+        if (cell != null) {
+            cell.setText(String.valueOf(letter));
+        }
+        currentTurnLabel.setText("Current Turn: " + console.getCurrentPlayer());
 
-        try {
-            GameReplayer replayer = new GameReplayer(this, console);
-            replayer.replayFromFile(file);
-        } catch (Exception ex) {
-            showAlert("Error", "Could not replay file");
+        if (console.getGame() instanceof GeneralSOSGame g) {
+            scoreLabel.setText("Score — Blue: " + g.getBlueScore() + " | Red: " + g.getRedScore());
+        }
+    }
+
+    public void showEndGameScreen(String winner) {
+        if (winner == null || "Draw".equals(winner)) {
+            showTieScreenStatic();
+        } else {
+            showWinScreenStatic(winner);
         }
     }
 

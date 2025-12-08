@@ -11,6 +11,7 @@ public class GameReplayer {
 
     private final GUI gui;
     private final Console console;
+    private static final int REPLAY_STEP_DELAY_MS = 500;
 
     public GameReplayer(GUI gui, Console console) {
         this.gui = gui;
@@ -19,7 +20,6 @@ public class GameReplayer {
 
     public void replayFromFile(File file) throws Exception {
         console.setReplaying(true);
-        System.out.println("REPLAY: started; console.isReplaying=" + console.isReplaying());
         List<String> lines = GameRecorder.loadFromFile(file);
 
         int size = 0;
@@ -45,16 +45,14 @@ public class GameReplayer {
             int col = Integer.parseInt(parts[3]);
             char letter = parts[4].charAt(0);
 
-            delay += 500;
+            delay += REPLAY_STEP_DELAY_MS;
             timeline.getKeyFrames().add(
                     new KeyFrame(Duration.millis(delay), e -> {
-                        console.markReplayCall(() -> {
-                            try {
-                                console.handleCellClick(row, col, letter);
-                            } catch (Exception ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        });
+                        try {
+                            console.applyReplayMove(row, col, letter);
+                        } catch (Exception ex) {
+                            throw new RuntimeException(ex);
+                        }
                     })
             );
         }
@@ -63,7 +61,6 @@ public class GameReplayer {
 
         timeline.setOnFinished(e -> {
             console.setReplaying(false);
-//            System.out.println("REPLAY: finished");
         });
     }
 }

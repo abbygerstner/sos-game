@@ -106,14 +106,11 @@ public class GeneralSOSGame extends SOSGame {
     private boolean createsSOS(int row, int col, char letter) {
         char[][] grid = board.getGrid();
 
-        // temporarily make move
         char old = grid[row][col];
         grid[row][col] = letter;
 
-        // check sequences
         boolean found = !countSOS(row, col).isEmpty();
 
-        // undo
         grid[row][col] = old;
         return found;
     }
@@ -139,7 +136,6 @@ public class GeneralSOSGame extends SOSGame {
             }
         }
 
-        // Otherwise fallback
         return getFirstAvailableMove();
     }
 

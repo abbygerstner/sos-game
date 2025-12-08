@@ -21,7 +21,6 @@ public class SimpleSOSGame extends SOSGame {
             }
             return true;
         }
-        // Otherwise, check if the board is full -> tie
         if (board.isBoardFull()) {
             gameInProgress = false;
             winner = "Draw"; // No winner, tie
@@ -36,7 +35,6 @@ public class SimpleSOSGame extends SOSGame {
     private SOSSequence formsSOS(int row, int col) {
         char[][] g = board.getGrid();
         int n = board.getSize();
-//        System.out.println("formsSOS checking at (" + row + "," + col + "), placed=" + g[row][col]);
 
         char placed = Character.toUpperCase(g[row][col]);
 
