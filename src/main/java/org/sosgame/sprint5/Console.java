@@ -107,8 +107,9 @@ public class Console {
 
     public ComputerMove makeComputerMove() {
         if (sosGame == null) return null;
-
         if (!sosGame.currentPlayerIsComputer()) return null;
+
+        String player = sosGame.getCurrentPlayer();
 
         SOSGame.Move move = sosGame.getComputerMove();
         if (move == null) return null;
@@ -117,8 +118,10 @@ public class Console {
         if (!success) return null;
 
         if (recorder != null) {
-            String player = sosGame.getCurrentPlayer();
-            recorder.recordMove(player, move.row(), move.col(), move.letter());
+            recorder.recordMove(
+                    player,
+                    move.row(), move.col(), move.letter()
+            );
         }
 
         return new ComputerMove(move.row(), move.col(), move.letter());

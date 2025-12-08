@@ -35,6 +35,13 @@ public class GameController {
             gui.updateMoveUI(move.row(), move.col(), move.letter());
 
             if (!console.isGameInProgress()) {
+                try {
+                    console.saveRecordingAuto();
+                    System.out.println("CPU vs CPU replay saved!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 gui.showEndGameScreen(console.getGame().getWinner());
                 return;
             }
