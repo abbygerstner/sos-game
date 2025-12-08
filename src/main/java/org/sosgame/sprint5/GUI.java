@@ -514,7 +514,7 @@ public class GUI extends Application {
 
     private void saveGameToFile() {
         try {
-            fileController.saveGame();
+            console.saveRecordingAuto();
             showAlert("Saved", "Game saved successfully!");
         } catch (Exception ex) {
             showAlert("Error", "Could not save file.");

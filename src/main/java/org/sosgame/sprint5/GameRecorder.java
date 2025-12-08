@@ -13,6 +13,11 @@ public class GameRecorder {
         recordedLines.add("MODE " + mode.name());
     }
 
+    public void recordPlayerTypes(boolean redIsComputer, boolean blueIsComputer) {
+        recordedLines.add("BLUE_PLAYER " + (blueIsComputer ? "COMPUTER" : "HUMAN"));
+        recordedLines.add("RED_PLAYER " + (redIsComputer ? "COMPUTER" : "HUMAN"));
+    }
+
     public void recordMove(String player, int row, int col, char letter) {
         recordedLines.add("MOVE " + player + " " + row + " " + col + " " + letter);
     }

@@ -25,11 +25,14 @@ public class Console {
     }
 
     public void initiateGame(int size, GameMode gameMode,
-                             boolean blueIsComputer, boolean redIsComputer) {
+                             boolean redIsComputer, boolean blueIsComputer) {
         if (gameMode == null) gameMode = GameMode.SIMPLE;
 
         if (size < MIN_BOARD_SIZE || size > MAX_BOARD_SIZE)
             throw new IllegalArgumentException("Board size must be between 3 and 10");
+
+        this.redIsComputer = redIsComputer;
+        this.blueIsComputer = blueIsComputer;
 
         sosGame = GameFactory.createGame(gameMode, size, blueIsComputer, redIsComputer);
         enableRecording(size, gameMode);
@@ -124,6 +127,7 @@ public class Console {
     public void enableRecording(int size, GameMode mode) {
         recorder = new GameRecorder();
         recorder.recordHeader(size, mode);
+        recorder.recordPlayerTypes(redIsComputer, blueIsComputer);
     }
 
     public void saveRecording(File file) throws Exception {
